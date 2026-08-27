@@ -1,6 +1,5 @@
 /* =========================================
-   COASTBRIDGE LOGISTICS GHANA
-   JAVASCRIPT
+   AJB IMPORT JAVASCRIPT
 ========================================= */
 
 
@@ -80,49 +79,6 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
 
-    if (mobileMenuBtn && mobileNavigation) {
-
-        mobileMenuBtn.addEventListener(
-            "click",
-            () => {
-
-                mobileNavigation.classList.toggle(
-                    "active"
-                );
-
-            }
-        );
-
-    }
-
-
-
-    /* =====================================
-       CLOSE MOBILE MENU
-    ===================================== */
-
-    const mobileLinks =
-        document.querySelectorAll(
-            ".mobile-navigation a"
-        );
-
-
-    mobileLinks.forEach(link => {
-
-        link.addEventListener("click", () => {
-
-           if (mobileNavigation) {
-               mobileNavigation.classList.remove(
-                   "active"
-               );
-           }
-
-       });
-
-    });
-
-
-
     /* =====================================
        CURRENT YEAR
     ===================================== */
@@ -158,7 +114,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         document.querySelector(
                             this.getAttribute("href")
                         );
-
 
                     if (target) {
 
@@ -246,7 +201,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     });
 
-});
     /* =====================================
        HEADER
     ===================================== */
@@ -295,12 +249,17 @@ document.addEventListener("DOMContentLoaded", () => {
             "click",
             () => {
 
-                mobileNavigation.classList.toggle(
-                    "active"
-                );
+                const isOpen =
+                    mobileNavigation.classList.toggle("active");
 
-                menuButton.classList.toggle(
-                    "active"
+                menuButton.classList.toggle("active", isOpen);
+                menuButton.setAttribute(
+                    "aria-expanded",
+                    String(isOpen)
+                );
+                menuButton.setAttribute(
+                    "aria-label",
+                    isOpen ? "Close navigation" : "Open navigation"
                 );
 
             }
@@ -574,8 +533,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 message: (document.getElementById("message") || {}).value || ""
             };
 
+            const isLocalPreview =
+                window.location.protocol === "file:" ||
+                ((window.location.hostname === "localhost" ||
+                    window.location.hostname === "127.0.0.1") &&
+                    window.location.port !== "3000");
+
             const apiBaseUrl =
-                window.location.protocol === "file:"
+                isLocalPreview
                     ? "http://127.0.0.1:3000"
                     : "";
 
@@ -602,7 +567,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             } catch (error) {
                 if (formStatus) {
-                    formStatus.textContent = window.location.protocol === "file:"
+                    formStatus.textContent = isLocalPreview
                         ? "Unable to connect to the quote server. Open the site at http://127.0.0.1:3000 and try again."
                         : ((error && error.message) || "Something went wrong. Please try again.");
                     formStatus.classList.add("show");
@@ -676,6 +641,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
+});
 
 
 /* =====================================================
@@ -1741,6 +1707,5 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.classList.add(
         "legal-page-ready"
     );
-
 
 });
