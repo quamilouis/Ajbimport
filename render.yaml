@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: ajb-imports
+    runtime: node
+    plan: starter
+    buildCommand: npm ci
+    startCommand: node server.js
+    healthCheckPath: /api/status
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: EXCEL_DATA_DIR
+        value: /var/data
+    disk:
+      name: quote-submissions
+      mountPath: /var/data
+      sizeGB: 1
