@@ -2,7 +2,7 @@
   "name": "website",
   "version": "1.0.0",
   "description": "",
-  "main": "scripts.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
@@ -14,6 +14,7 @@
   "dependencies": {
     "dotenv": "^17.4.2",
     "exceljs": "^4.4.0",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "googleapis": "^176.0.0"
   }
 }
