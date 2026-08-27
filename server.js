@@ -1,6 +1,5 @@
 /* =========================================
-   COASTBRIDGE LOGISTICS GHANA
-   SERVER
+    AJB IMPORT SERVER
    ExcelJS Integration
 ========================================= */
 
@@ -8,6 +7,7 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const ExcelJS = require("exceljs");
+const { google } = require("googleapis");
 require("dotenv").config();
 
 const app = express();
@@ -50,7 +50,7 @@ app.use(express.static(__dirname));
 ========================================= */
 
 const excelFile = path.join(
-    __dirname,
+    process.env.EXCEL_DATA_DIR || __dirname,
     "CoastBridge_Quote_Submissions.xlsx"
 );
 
@@ -77,6 +77,55 @@ const headers = [
     "Status",
     "Admin Notes"
 ];
+
+
+async function appendToGoogleSheet(data) {
+
+    const credentials = JSON.parse(
+        process.env.GOOGLE_SERVICE_ACCOUNT_JSON
+    );
+
+    const auth = new google.auth.GoogleAuth({
+        credentials,
+        scopes: [
+            "https://www.googleapis.com/auth/spreadsheets"
+        ]
+    });
+
+    const sheets = google.sheets({
+        version: "v4",
+        auth
+    });
+
+    const values = [[
+        new Date().toISOString(),
+        data.fullName || "",
+        data.company || "",
+        data.phone || "",
+        data.email || "",
+        data.service || "",
+        data.origin || "",
+        data.destination || "",
+        data.cargoType || "",
+        data.cargoWeight || "",
+        data.cargoVolume || "",
+        data.shippingDate || "",
+        "Email / Phone",
+        data.message || "",
+        "New",
+        ""
+    ]];
+
+    const response = await sheets.spreadsheets.values.append({
+        spreadsheetId: process.env.GOOGLE_SHEET_ID,
+        range: "Quote Submissions!A:P",
+        valueInputOption: "USER_ENTERED",
+        insertDataOption: "INSERT_ROWS",
+        requestBody: { values }
+    });
+
+    return response.data.updates.updatedRange;
+}
 
 
 /* =========================================
@@ -390,6 +439,37 @@ app.post(
             }
 
 
+            if (
+                process.env.GOOGLE_SHEET_ID &&
+                process.env.GOOGLE_SERVICE_ACCOUNT_JSON
+            ) {
+
+                const updatedRange =
+                    await appendToGoogleSheet({
+                        fullName,
+                        company,
+                        email,
+                        phone,
+                        service,
+                        origin,
+                        destination,
+                        cargoType,
+                        cargoWeight,
+                        cargoVolume,
+                        shippingDate,
+                        message
+                    });
+
+                return res.status(200).json({
+                    success: true,
+                    message:
+                        "Your quote request has been received successfully.",
+                    range: updatedRange
+                });
+
+            }
+
+
             /* ================================
                LOAD EXISTING WORKBOOK
             ================================= */
@@ -686,12 +766,14 @@ app.get(
 
 
 /* =========================================
-   START SERVER
+    START SERVER
 ========================================= */
 
-app.listen(
-    PORT,
-    () => {
+if (require.main === module) {
+
+     app.listen(
+          PORT,
+          () => {
 
         console.log("");
         console.log(
@@ -714,5 +796,9 @@ app.listen(
             "======================================"
         );
 
-    }
-);
+        }
+    );
+
+}
+
+module.exports = app;
