@@ -1347,7 +1347,7 @@ button {
     color: var(--white);
 
     background-image:
-        url("image.png");
+        url("images/image.png");
 
     background-size: cover;
     background-position: center;
@@ -1661,7 +1661,7 @@ button {
 
 .contact-page-bg {
     background-image:
-        url("coustomer-image.jpg");
+        url("customer-image.jpg");
 }
 
 .page-hero-overlay {
