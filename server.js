@@ -1,401 +1,387 @@
-/* =========================================
-    AJB IMPORT SERVER
-   ExcelJS Integration
-========================================= */
+﻿/* =========================================================
+   AJB IMPORTS GHANA
+   SECURE LOGISTICS WEBSITE SERVER
+========================================================= */
+
+require("dotenv").config();
 
 const express = require("express");
+const session = require("express-session");
+const bcrypt = require("bcryptjs");
 const path = require("path");
-const fs = require("fs");
-const ExcelJS = require("exceljs");
-const { google } = require("googleapis");
-require("dotenv").config();
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
+const db = require("./database");
 
 const app = express();
 
 const PORT = process.env.PORT || 3000;
 
 
-/* Allow local file and preview-server pages to submit quotes. */
-app.use((req, res, next) => {
-
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Content-Type");
-    res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-
-    if (req.method === "OPTIONS") {
-        return res.sendStatus(204);
-    }
-
-    next();
-});
-
-
-/* =========================================
+/* =========================================================
    MIDDLEWARE
-========================================= */
+========================================================= */
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-/* =========================================
-   FRONTEND
-========================================= */
+/* =========================================================
+   SESSION
+========================================================= */
 
-app.use(express.static(__dirname));
+app.use(
+    session({
+        secret:
+            process.env.SESSION_SECRET ||
+            "change-this-secret",
 
+        resave: false,
 
-/* =========================================
-   EXCEL FILE
-========================================= */
+        saveUninitialized: false,
 
-const excelFile = path.join(
-    process.env.EXCEL_DATA_DIR || __dirname,
-    "CoastBridge_Quote_Submissions.xlsx"
+        cookie: {
+            httpOnly: true,
+            secure: false,
+            maxAge: 1000 * 60 * 60 * 4
+        }
+    })
 );
 
 
-/* =========================================
-   EXCEL HEADERS
-========================================= */
+/* =========================================================
+    DATA STORAGE
+    SQLite database.
+======================================================== */
 
-const headers = [
-    "Submission Date",
-    "Customer Name",
-    "Company",
-    "Phone",
-    "Email",
-    "Service Requested",
-    "Origin",
-    "Destination",
-    "Cargo / Package Details",
-    "Cargo Weight",
-    "Cargo Volume",
-    "Shipping Date",
-    "Preferred Contact",
-    "Message",
-    "Status",
-    "Admin Notes"
-];
+let dbInitialized = false;
 
-
-async function appendToGoogleSheet(data) {
-
-    const credentials = JSON.parse(
-        process.env.GOOGLE_SERVICE_ACCOUNT_JSON
-    );
-
-    const auth = new google.auth.GoogleAuth({
-        credentials,
-        scopes: [
-            "https://www.googleapis.com/auth/spreadsheets"
-        ]
-    });
-
-    const sheets = google.sheets({
-        version: "v4",
-        auth
-    });
-
-    const values = [[
-        new Date().toISOString(),
-        data.fullName || "",
-        data.company || "",
-        data.phone || "",
-        data.email || "",
-        data.service || "",
-        data.origin || "",
-        data.destination || "",
-        data.cargoType || "",
-        data.cargoWeight || "",
-        data.cargoVolume || "",
-        data.shippingDate || "",
-        "Email / Phone",
-        data.message || "",
-        "New",
-        ""
-    ]];
-
-    const response = await sheets.spreadsheets.values.append({
-        spreadsheetId: process.env.GOOGLE_SHEET_ID,
-        range: "Quote Submissions!A:P",
-        valueInputOption: "USER_ENTERED",
-        insertDataOption: "INSERT_ROWS",
-        requestBody: { values }
-    });
-
-    return response.data.updates.updatedRange;
+async function ensureDatabase() {
+    if (dbInitialized) return;
+    await db.initializeDatabase();
+    await db.migrateLegacyAdmins();
+    dbInitialized = true;
 }
 
 
-/* =========================================
-   STATUS OPTIONS
-========================================= */
+/* =========================================================
+   ADMIN AUTHENTICATION MIDDLEWARE
+========================================================= */
 
-const statusOptions = [
-    "New",
-    "Contacted",
-    "Quoted",
-    "In Progress",
-    "Completed",
-    "Cancelled"
-];
+function requireAdmin(req, res, next) {
 
-
-/* =========================================
-   CREATE WORKBOOK IF MISSING
-========================================= */
-
-async function createWorkbook() {
-
-    if (fs.existsSync(excelFile)) {
-        return;
+    if (
+        req.session &&
+        req.session.isAdmin === true
+    ) {
+        return next();
     }
 
-    const workbook =
-        new ExcelJS.Workbook();
+    return res.status(401).json({
+        success: false,
+        message: "Authentication required."
+    });
+
+}
 
 
-    const worksheet =
-        workbook.addWorksheet(
-            "Quote Submissions"
-        );
+/* =========================================================
+   PUBLIC WEBSITE
+========================================================= */
+
+app.use(
+    express.static(
+        path.join(__dirname, "public")
+    )
+);
 
 
-    /* ================================
-       COASTBRIDGE TITLE
-    ================================= */
+/* =========================================================
+   ADMIN LOGIN PAGE
+========================================================= */
 
-    worksheet.mergeCells(
-        "A1:P1"
-    );
+app.get("/admin/login", (req, res) => {
 
-    const title =
-        worksheet.getCell("A1");
-
-    title.value =
-        "COASTBRIDGE LOGISTICS GHANA";
-
-    title.font = {
-        name: "Calibri",
-        size: 18,
-        bold: true,
-        color: {
-            argb: "FFFFFFFF"
-        }
-    };
-
-    title.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: {
-            argb: "FF06263A"
-        }
-    };
-
-    title.alignment = {
-        horizontal: "center",
-        vertical: "middle"
-    };
-
-    worksheet.getRow(1).height = 32;
-
-
-    /* ================================
-       SUBTITLE
-    ================================= */
-
-    worksheet.mergeCells(
-        "A2:P2"
-    );
-
-    const subtitle =
-        worksheet.getCell("A2");
-
-    subtitle.value =
-        "CUSTOMER QUOTE & CONTACT SUBMISSIONS";
-
-    subtitle.font = {
-        name: "Calibri",
-        size: 11,
-        bold: true,
-        color: {
-            argb: "FF06263A"
-        }
-    };
-
-    subtitle.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: {
-            argb: "FFD4A62A"
-        }
-    };
-
-    subtitle.alignment = {
-        horizontal: "center",
-        vertical: "middle"
-    };
-
-
-    /* ================================
-       HEADER
-    ================================= */
-
-    const headerRow =
-        worksheet.getRow(4);
-
-    headers.forEach(
-        (header, index) => {
-
-            const cell =
-                headerRow.getCell(
-                    index + 1
-                );
-
-            cell.value = header;
-
-            cell.font = {
-                bold: true,
-                color: {
-                    argb: "FFFFFFFF"
-                }
-            };
-
-            cell.fill = {
-                type: "pattern",
-                pattern: "solid",
-                fgColor: {
-                    argb: "FF06263A"
-                }
-            };
-
-            cell.alignment = {
-                horizontal: "center",
-                vertical: "middle",
-                wrapText: true
-            };
-
-        }
-    );
-
-    headerRow.height = 30;
-
-
-    /* ================================
-       COLUMN WIDTHS
-    ================================= */
-
-    const widths = [
-        22, 25, 25, 18,
-        32, 25, 22, 22,
-        40, 18, 18, 18,
-        20, 45, 18, 40
-    ];
-
-    widths.forEach(
-        (width, index) => {
-
-            worksheet.getColumn(
-                index + 1
-            ).width = width;
-
-        }
-    );
-
-
-    /* ================================
-       STATUS DROPDOWN
-    ================================= */
-
-    for (
-        let row = 5;
-        row <= 1000;
-        row++
+    if (
+        req.session &&
+        req.session.isAdmin
     ) {
 
-        worksheet.getCell(
-            `O${row}`
-        ).dataValidation = {
-
-            type: "list",
-
-            allowBlank: true,
-
-            formulae: [
-                `"${statusOptions.join(",")}"`
-            ],
-
-            showErrorMessage: true,
-
-            errorTitle:
-                "Invalid Status",
-
-            error:
-                "Please select a valid CoastBridge status."
-
-        };
+        return res.redirect(
+            "/admin/dashboard"
+        );
 
     }
 
-
-    /* ================================
-       FILTER
-    ================================= */
-
-    worksheet.autoFilter = {
-        from: "A4",
-        to: "P4"
-    };
-
-
-    /* ================================
-       FREEZE HEADER
-    ================================= */
-
-    worksheet.views = [
-        {
-            state: "frozen",
-            ySplit: 4
-        }
-    ];
-
-
-    /* ================================
-       SAVE
-    ================================= */
-
-    await workbook.xlsx.writeFile(
-        excelFile
+    res.sendFile(
+        path.join(
+            __dirname,
+            "public",
+            "admin-login.html"
+        )
     );
 
-}
+});
 
 
-/* =========================================
-   INITIALIZE
-========================================= */
+/* =========================================================
+   ADMIN DASHBOARD
+========================================================= */
 
-createWorkbook()
-    .catch(error => {
+app.get(
+    "/admin/dashboard",
+    requireAdmin,
+    (req, res) => {
 
-        console.error(
-            "Unable to create Excel workbook:",
-            error
+        res.sendFile(
+            path.join(
+                __dirname,
+                "public",
+                "admin.html"
+            )
         );
 
-    });
+    }
+);
 
 
-/* =========================================
-   QUOTE API
-========================================= */
+/* =========================================================
+   ADMIN LOGIN API
+========================================================= */
+
+app.post(
+    "/api/admin/login",
+    async (req, res) => {
+
+        try {
+
+            const {
+                email,
+                password
+            } = req.body;
+
+
+            if (!email || !password) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Email and password are required."
+                });
+
+            }
+
+
+            await ensureDatabase();
+
+
+            let admin = await db.getAdminByEmail(
+                email.trim().toLowerCase()
+            );
+
+
+            if (
+                admin &&
+                admin.passwordHash
+            ) {
+
+                const passwordMatches =
+                    await bcrypt.compare(
+                        password,
+                        admin.passwordHash
+                    );
+
+
+                if (passwordMatches) {
+
+                    req.session.isAdmin = true;
+
+                    req.session.adminEmail =
+                        admin.email;
+
+
+                    return res.json({
+                        success: true,
+                        message:
+                            "Login successful.",
+                        redirect:
+                            "/admin/dashboard"
+                    });
+
+                }
+
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Invalid email or password."
+                });
+
+            }
+
+
+            const adminEmail =
+                process.env.ADMIN_EMAIL;
+
+
+            const passwordHash =
+                process.env.ADMIN_PASSWORD_HASH;
+
+
+            if (
+                !adminEmail ||
+                !passwordHash
+            ) {
+
+                console.error(
+                    "Admin credentials are not configured."
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Admin authentication is not configured."
+                });
+
+            }
+
+
+            if (
+                email.trim().toLowerCase() !==
+                adminEmail.trim().toLowerCase()
+            ) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Invalid email or password."
+                });
+
+            }
+
+
+            const envPasswordMatches =
+                await bcrypt.compare(
+                    password,
+                    passwordHash
+                );
+
+
+            if (!envPasswordMatches) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Invalid email or password."
+                });
+
+            }
+
+
+            req.session.isAdmin = true;
+
+            req.session.adminEmail =
+                adminEmail;
+
+
+            return res.json({
+                success: true,
+                message:
+                    "Login successful.",
+                redirect:
+                    "/admin/dashboard"
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Admin login error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to login."
+            });
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   ADMIN SESSION CHECK
+========================================================= */
+
+app.get(
+    "/api/admin/me",
+    requireAdmin,
+    (req, res) => {
+
+        res.json({
+            success: true,
+            admin: {
+                email:
+                    req.session.adminEmail
+            }
+        });
+
+    }
+);
+
+
+/* =========================================================
+   ADMIN LOGOUT
+========================================================= */
+
+app.post(
+    "/api/admin/logout",
+    (req, res) => {
+
+        req.session.destroy(error => {
+
+            if (error) {
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Unable to logout."
+                });
+
+            }
+
+
+            res.clearCookie(
+                "connect.sid"
+            );
+
+
+            res.json({
+                success: true,
+                message:
+                    "Logged out successfully."
+            });
+
+        });
+
+    }
+);
+
+
+/* =========================================================
+   QUOTE SUBMISSION
+========================================================= */
 
 app.post(
     "/api/quote",
     async (req, res) => {
 
         try {
+
+            await ensureDatabase();
+
 
             const {
                 fullName,
@@ -413,10 +399,6 @@ app.post(
             } = req.body;
 
 
-            /* ================================
-               VALIDATION
-            ================================= */
-
             if (
                 !fullName ||
                 !email ||
@@ -428,308 +410,64 @@ app.post(
             ) {
 
                 return res.status(400).json({
-
                     success: false,
-
                     message:
                         "Please complete all required fields."
-
                 });
 
             }
 
 
-            if (
-                process.env.GOOGLE_SHEET_ID &&
-                process.env.GOOGLE_SERVICE_ACCOUNT_JSON
-            ) {
+            const enquiry =
+                await db.createQuoteSubmission({
 
-                const updatedRange =
-                    await appendToGoogleSheet({
-                        fullName,
-                        company,
-                        email,
-                        phone,
-                        service,
-                        origin,
-                        destination,
-                        cargoType,
-                        cargoWeight,
-                        cargoVolume,
-                        shippingDate,
-                        message
-                    });
+                    fullName,
+                    company,
+                    email,
+                    phone,
+                    service,
+                    origin,
+                    destination,
+                    cargoType,
+                    cargoWeight,
+                    cargoVolume,
+                    shippingDate,
+                    message
 
-                return res.status(200).json({
-                    success: true,
-                    message:
-                        "Your quote request has been received successfully.",
-                    range: updatedRange
                 });
 
-            }
-
-
-            /* ================================
-               LOAD EXISTING WORKBOOK
-            ================================= */
-
-            const workbook =
-                new ExcelJS.Workbook();
-
-
-            await workbook.xlsx.readFile(
-                excelFile
-            );
-
-
-            /* ================================
-               GET EXISTING SHEET
-            ================================= */
-
-            let worksheet =
-                workbook.getWorksheet(
-                    "Quote Submissions"
-                );
-
-
-            /* ================================
-               SAFETY FALLBACK
-            ================================= */
-
-            if (!worksheet) {
-
-                worksheet =
-                    workbook.addWorksheet(
-                        "Quote Submissions"
-                    );
-
-            }
-
-
-            /* ================================
-               FIND NEXT EMPTY ROW
-            ================================= */
-
-            const nextRow =
-                Math.max(
-                    worksheet.lastRow.number + 1,
-                    5
-                );
-
-
-            /* ================================
-               DATA
-            ================================= */
-
-            const row =
-                worksheet.getRow(
-                    nextRow
-                );
-
-
-            row.values = [
-
-                new Date(),
-
-                fullName || "",
-
-                company || "",
-
-                phone || "",
-
-                email || "",
-
-                service || "",
-
-                origin || "",
-
-                destination || "",
-
-                cargoType || "",
-
-                cargoWeight || "",
-
-                cargoVolume || "",
-
-                shippingDate || "",
-
-                "Email / Phone",
-
-                message || "",
-
-                "New",
-
-                ""
-
-            ];
-
-
-            /* ================================
-               DATE FORMAT
-            ================================= */
-
-            row.getCell(1).numFmt =
-                "dd-mmm-yyyy hh:mm";
-
-
-            /* ================================
-               WRAP TEXT
-            ================================= */
-
-            row.eachCell(
-                cell => {
-
-                    cell.alignment = {
-                        vertical: "top",
-                        wrapText: true
-                    };
-
-                }
-            );
-
-
-            /* ================================
-               STATUS DROPDOWN
-            ================================= */
-
-            row.getCell(15)
-                .dataValidation = {
-
-                    type: "list",
-
-                    allowBlank: true,
-
-                    formulae: [
-                        `"${statusOptions.join(",")}"`
-                    ],
-
-                    showErrorMessage: true,
-
-                    errorTitle:
-                        "Invalid Status",
-
-                    error:
-                        "Please select a valid CoastBridge status."
-
-                };
-
-
-            /* ================================
-               STATUS DEFAULT
-            ================================= */
-
-            row.getCell(15).value =
-                "New";
-
-
-            /* ================================
-               ROW HEIGHT
-            ================================= */
-
-            row.height = 42;
-
-
-            /* ================================
-               PRESERVE / APPLY FILTER
-            ================================= */
-
-            worksheet.autoFilter = {
-                from: "A4",
-                to: "P4"
-            };
-
-
-            /* ================================
-               PRESERVE FREEZE PANES
-            ================================= */
-
-            worksheet.views = [
-                {
-                    state: "frozen",
-                    ySplit: 4
-                }
-            ];
-
-
-            /* ================================
-               SAVE WORKBOOK
-            ================================= */
-
-            await workbook.xlsx.writeFile(
-                excelFile
-            );
-
 
             console.log(
-                "======================================"
-            );
-
-            console.log(
-                "NEW COASTBRIDGE QUOTE"
-            );
-
-            console.log(
-                "Customer:",
-                fullName
-            );
-
-            console.log(
-                "Service:",
-                service
-            );
-
-            console.log(
-                "Origin:",
-                origin
-            );
-
-            console.log(
-                "Destination:",
-                destination
-            );
-
-            console.log(
-                "Excel Row:",
-                nextRow
-            );
-
-            console.log(
-                "======================================"
+                "New AJB quote:",
+                enquiry
             );
 
 
-            /* ================================
-               RESPONSE
-            ================================= */
-
-            return res.status(200).json({
+            res.status(201).json({
 
                 success: true,
 
                 message:
-                    "Your quote request has been received successfully.",
+                    "Quote request received.",
 
-                row: nextRow
+                enquiry: {
+                    id:
+                        enquiry.lastID
+                }
 
             });
-
 
         } catch (error) {
 
             console.error(
-                "QUOTE ERROR:",
+                "Quote error:",
                 error
             );
 
-
-            return res.status(500).json({
-
+            res.status(500).json({
                 success: false,
-
                 message:
-                    "We could not save your quote request. Please try again."
-
+                    "Unable to submit quote."
             });
 
         }
@@ -738,9 +476,601 @@ app.post(
 );
 
 
-/* =========================================
-   SERVER STATUS
-========================================= */
+/* =========================================================
+   ADMIN - GET QUOTES
+========================================================= */
+
+app.get(
+    "/api/admin/quotes",
+    requireAdmin,
+    async (req, res) => {
+
+        try {
+
+            await ensureDatabase();
+
+            const quotes =
+                await db.listQuoteSubmissions();
+
+
+            res.json({
+
+                success: true,
+
+                quotes
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Unable to load quotes:",
+                error
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Unable to load quotes."
+            });
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   ADMIN - UPDATE QUOTE STATUS
+========================================================= */
+
+app.patch(
+    "/api/admin/quotes/:id",
+    requireAdmin,
+    async (req, res) => {
+
+        try {
+
+            await ensureDatabase();
+
+            const {
+                status
+            } = req.body;
+
+
+            const allowedStatuses = [
+                "New",
+                "Contacted",
+                "Processing",
+                "Completed",
+                "Cancelled"
+            ];
+
+
+            if (
+                !allowedStatuses.includes(
+                    status
+                )
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Invalid status."
+                });
+
+            }
+
+
+            const rows =
+                await db.all(
+                    `SELECT * FROM quote_submissions WHERE id = ?`,
+                    [req.params.id]
+                );
+
+            const enquiry =
+                rows[0];
+
+
+            if (!enquiry) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Quote not found."
+                });
+
+            }
+
+
+            await db.run(
+                `UPDATE quote_submissions SET status = ? WHERE id = ?`,
+                [status, req.params.id]
+            );
+
+
+            res.json({
+
+                success: true,
+
+                message:
+                    "Status updated.",
+
+                enquiry: {
+                    ...enquiry,
+                    status
+                }
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Status update error:",
+                error
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Unable to update status."
+            });
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   ADMIN STATISTICS
+========================================================= */
+
+app.get(
+    "/api/admin/stats",
+    requireAdmin,
+    async (req, res) => {
+
+        try {
+
+            await ensureDatabase();
+
+            const quotes =
+                await db.listQuoteSubmissions();
+
+
+            const total =
+                quotes.length;
+
+
+            const newQuotes =
+                quotes.filter(
+                    item =>
+                        item.status ===
+                        "New"
+                ).length;
+
+
+            const contacted =
+                quotes.filter(
+                    item =>
+                        item.status ===
+                        "Contacted"
+                ).length;
+
+
+            const processing =
+                quotes.filter(
+                    item =>
+                        item.status ===
+                        "Processing"
+                ).length;
+
+
+            const completed =
+                quotes.filter(
+                    item =>
+                        item.status ===
+                        "Completed"
+                ).length;
+
+
+            res.json({
+
+                success: true,
+
+                stats: {
+
+                    total,
+
+                    new:
+                        newQuotes,
+
+                    contacted,
+
+                    processing,
+
+                    completed
+
+                }
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Stats error:",
+                error
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Unable to load stats."
+            });
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   ADMIN REGISTRATION
+======================================================== */
+
+app.post(
+    "/api/admin/register",
+    async (req, res) => {
+
+        try {
+
+            await ensureDatabase();
+
+            const {
+                fullName,
+                email,
+                password
+            } = req.body;
+
+
+            if (!fullName || !email || !password) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "All fields are required."
+                });
+
+            }
+
+
+            const existing =
+                await db.getAdminByEmail(
+                    email.trim().toLowerCase()
+                );
+
+
+            if (existing) {
+
+                return res.status(409).json({
+                    success: false,
+                    message:
+                        "An administrator with this email already exists."
+                });
+
+            }
+
+
+            const passwordHash =
+                await bcrypt.hash(password, 12);
+
+
+            const admin =
+                await db.createAdmin({
+
+                    id: crypto.randomUUID(),
+
+                    fullName:
+                        fullName.trim(),
+
+                    email:
+                        email.trim().toLowerCase(),
+
+                    passwordHash,
+
+                    role: "admin",
+
+                    createdAt:
+                        new Date().toISOString()
+
+                });
+
+
+            return res.status(201).json({
+                success: true,
+                message:
+                    "Administrator account created successfully.",
+                admin: {
+                    id: admin.id,
+                    email: email.trim().toLowerCase()
+                }
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Registration error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to create account."
+            });
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   FORGOT PASSWORD
+======================================================== */
+
+const resetTokenCache = new Map();
+
+app.post(
+    "/api/admin/forgot-password",
+    async (req, res) => {
+
+        try {
+
+            await ensureDatabase();
+
+            const { email } = req.body;
+
+
+            if (!email) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Email is required."
+                });
+
+            }
+
+
+            const admin =
+                await db.getAdminByEmail(
+                    email.trim().toLowerCase()
+                );
+
+
+            const genericMessage =
+                "If an administrator account exists with that email, you will receive a reset link.";
+
+
+            if (!admin) {
+
+                return res.json({
+                    success: true,
+                    message: genericMessage
+                });
+
+            }
+
+
+            const token =
+                crypto.randomBytes(32).toString("hex");
+
+            const tokenHash =
+                crypto
+                    .createHash("sha256")
+                    .update(token)
+                    .digest("hex");
+
+            const expires =
+                Date.now() + 1000 * 60 * 60 * 2;
+
+
+            await db.updatePasswordResetToken(
+                admin.id,
+                tokenHash,
+                expires
+            );
+
+
+            resetTokenCache.set(tokenHash, {
+                id: admin.id,
+                expires
+            });
+
+
+            const transporter =
+                nodemailer.createTransport({
+
+                    host:
+                        process.env.SMTP_HOST ||
+                        "smtp.gmail.com",
+
+                    port:
+                        parseInt(
+                            process.env.SMTP_PORT ||
+                            "587"
+                        ),
+
+                    secure: false,
+
+                    auth: {
+
+                        user:
+                            process.env.SMTP_USER,
+
+                        pass:
+                            process.env.SMTP_PASS
+
+                    }
+
+                });
+
+
+            const resetUrl =
+                `${req.protocol}://${req.get("host")}/reset-password.html?token=${token}`;
+
+
+            await transporter.sendMail({
+
+                from:
+                    `"AJB Imports Admin" <${process.env.SMTP_USER}>`,
+
+                to: admin.email,
+
+                subject:
+                    "AJB Imports - Password Reset",
+
+                text:
+                    `Click the following link to reset your password: ${resetUrl}\n\nThis link expires in 2 hours.`
+
+            });
+
+
+            return res.json({
+                success: true,
+                message: genericMessage
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Forgot password error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to process request."
+            });
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   RESET PASSWORD
+======================================================== */
+
+app.post(
+    "/api/admin/reset-password",
+    async (req, res) => {
+
+        try {
+
+            await ensureDatabase();
+
+            const {
+                token,
+                password
+            } = req.body;
+
+
+            if (!token || !password) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Token and password are required."
+                });
+
+            }
+
+
+            const tokenHash =
+                crypto
+                    .createHash("sha256")
+                    .update(token)
+                    .digest("hex");
+
+
+            const cached =
+                resetTokenCache.get(tokenHash);
+
+
+            let admin = null;
+
+
+            if (cached && cached.expires > Date.now()) {
+
+                admin = await db.getAdminById(cached.id);
+
+            } else {
+
+                admin = await db.getAdminByResetTokenHash(tokenHash);
+
+            }
+
+
+            if (!admin) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Invalid or expired reset token."
+                });
+
+            }
+
+
+            const passwordHash =
+                await bcrypt.hash(password, 12);
+
+
+            await db.updatePassword(
+                admin.id,
+                passwordHash,
+                new Date().toISOString()
+            );
+
+
+            resetTokenCache.delete(tokenHash);
+
+            await db.clearPasswordResetToken(admin.id);
+
+
+            return res.json({
+                success: true,
+                message:
+                    "Password reset successfully."
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Reset password error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to reset password."
+            });
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   HEALTH CHECK
+======================================================== */
 
 app.get(
     "/api/status",
@@ -750,11 +1080,7 @@ app.get(
 
             success: true,
 
-            service:
-                "CoastBridge Logistics Ghana",
-
-            status:
-                "online",
+            status: "ok",
 
             timestamp:
                 new Date().toISOString()
@@ -765,40 +1091,58 @@ app.get(
 );
 
 
-/* =========================================
-    START SERVER
-========================================= */
+/* =========================================================
+   404
+======================================================== */
 
-if (require.main === module) {
+app.use(
+    (req, res) => {
 
-     app.listen(
-          PORT,
-          () => {
-
-        console.log("");
-        console.log(
-            "======================================"
+        res.status(404).send(
+            "Page not found."
         );
 
-        console.log(
-            " COASTBRIDGE LOGISTICS GHANA"
-        );
+    }
+);
 
-        console.log(
-            " Server running successfully"
-        );
 
-        console.log(
-            ` http://localhost:${PORT}`
-        );
+/* =========================================================
+   START SERVER
+======================================================== */
 
-        console.log(
-            "======================================"
-        );
+app.listen(
+    PORT,
+    async () => {
+
+        try {
+
+            await ensureDatabase();
+
+        } catch (error) {
+
+            console.error(
+                "Database initialization error:",
+                error
+            );
 
         }
-    );
 
-}
+        console.log(
+            `
+============================================
 
-module.exports = app;
+   AJB IMPORTS GHANA
+   LOGISTICS WEBSITE
+
+   Server running on:
+   http://localhost:${PORT}
+
+   Admin Login:
+   http://localhost:${PORT}/admin/login
+
+============================================
+`
+        );
+
+    }
+);
