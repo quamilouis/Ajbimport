@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>AJB Imports | Admin Login</title>
+
+    <link
+        rel="stylesheet"
+        href="/admin.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    >
+
+</head>
+
+<body class="login-page">
+
+    <div class="login-background"></div>
+
+    <main class="login-container">
+
+        <div class="login-card">
+
+            <div class="login-logo">
+
+                <div class="logo-symbol">
+                    AJB
+                </div>
+
+                <div>
+                    <strong>
+                        AJB IMPORTS
+                    </strong>
+
+                    <span>
+                        GHANA
+                    </span>
+                </div>
+
+            </div>
+
+
+            <div class="login-heading">
+
+                <span>
+                    ADMINISTRATION
+                </span>
+
+                <h1>
+                    Welcome Back
+                </h1>
+
+                <p>
+                    Sign in to manage AJB Imports.
+                </p>
+
+            </div>
+
+
+            <form id="adminLoginForm">
+
+                <div class="input-group">
+
+                    <label for="email">
+                        Email Address
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <i class="fa-solid fa-envelope"></i>
+
+                        <input
+                            type="email"
+                            id="email"
+                            placeholder="admin@ajbimports.com"
+                            autocomplete="username"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="input-group">
+
+                    <label for="password">
+                        Password
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <i class="fa-solid fa-lock"></i>
+
+                        <input
+                            type="password"
+                            id="password"
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
+                            required
+                        >
+
+                        <button
+                            type="button"
+                            id="togglePassword"
+                            class="password-toggle"
+                        >
+
+                            <i class="fa-solid fa-eye"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="loginMessage"
+                    class="login-message"
+                ></div>
+
+
+                <button
+                    type="submit"
+                    class="login-button"
+                    id="loginButton"
+                >
+
+                    <span>
+                        Sign In
+                    </span>
+
+                    <i class="fa-solid fa-arrow-right"></i>
+
+                </button>
+
+            </form>
+
+
+            <div class="login-footer">
+
+                <i class="fa-solid fa-shield-halved"></i>
+
+                <span>
+                    Secure AJB Imports Administration
+                </span>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <script src="/admin.js"></script>
+
+</body>
+
+</html>

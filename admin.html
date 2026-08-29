@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        AJB Imports | Admin Dashboard
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="/admin.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    >
+
+</head>
+
+<body class="dashboard-page">
+
+
+<!-- =========================================
+     SIDEBAR
+========================================= -->
+
+<aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-brand">
+
+        <div class="brand-mark">
+            AJB
+        </div>
+
+        <div class="brand-text">
+
+            <strong>
+                AJB IMPORTS
+            </strong>
+
+            <span>
+                GHANA
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <nav class="admin-nav">
+
+        <a
+            href="#"
+            class="nav-item active"
+            data-section="dashboard"
+        >
+
+            <i class="fa-solid fa-chart-line"></i>
+
+            <span>
+                Dashboard
+            </span>
+
+        </a>
+
+
+        <a
+            href="#"
+            class="nav-item"
+            data-section="quotes"
+        >
+
+            <i class="fa-solid fa-file-circle-check"></i>
+
+            <span>
+                Quote Requests
+            </span>
+
+            <b id="sidebarQuoteCount">
+                0
+            </b>
+
+        </a>
+
+
+        <a
+            href="#"
+            class="nav-item"
+            data-section="services"
+        >
+
+            <i class="fa-solid fa-truck-fast"></i>
+
+            <span>
+                Services
+            </span>
+
+        </a>
+
+
+        <a
+            href="/"
+            class="nav-item"
+            target="_blank"
+        >
+
+            <i class="fa-solid fa-globe"></i>
+
+            <span>
+                View Website
+            </span>
+
+        </a>
+
+    </nav>
+
+
+    <div class="sidebar-bottom">
+
+        <button
+            id="logoutButton"
+            class="logout-button"
+        >
+
+            <i class="fa-solid fa-right-from-bracket"></i>
+
+            <span>
+                Logout
+            </span>
+
+        </button>
+
+    </div>
+
+</aside>
+
+
+
+<!-- =========================================
+     MAIN
+========================================= -->
+
+<main class="dashboard-main">
+
+
+    <!-- HEADER -->
+
+    <header class="dashboard-header">
+
+        <button
+            id="sidebarToggle"
+            class="sidebar-toggle"
+        >
+
+            <i class="fa-solid fa-bars"></i>
+
+        </button>
+
+
+        <div>
+
+            <span class="dashboard-label">
+                AJB IMPORTS
+            </span>
+
+            <h1 id="pageTitle">
+                Dashboard
+            </h1>
+
+        </div>
+
+
+        <div class="admin-profile">
+
+            <div class="profile-icon">
+                <i class="fa-solid fa-user-shield"></i>
+            </div>
+
+            <div>
+
+                <strong>
+                    Administrator
+                </strong>
+
+                <small id="adminEmail">
+                    Loading...
+                </small>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- =====================================
+         DASHBOARD SECTION
+    ====================================== -->
+
+    <section
+        id="dashboardSection"
+        class="admin-section active"
+    >
+
+        <div class="welcome-banner">
+
+            <div>
+
+                <span>
+                    ADMIN CONTROL CENTER
+                </span>
+
+                <h2>
+                    Manage AJB Imports
+                </h2>
+
+                <p>
+                    Monitor enquiries, manage quote requests
+                    and keep your logistics operations organized.
+                </p>
+
+            </div>
+
+            <i class="fa-solid fa-ship"></i>
+
+        </div>
+
+
+        <!-- STATISTICS -->
+
+        <div class="stats-grid">
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+
+                <div>
+
+                    <span>
+                        Total Requests
+                    </span>
+
+                    <strong id="totalQuotes">
+                        0
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+
+                <div>
+
+                    <span>
+                        New
+                    </span>
+
+                    <strong id="newQuotes">
+                        0
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    <i class="fa-solid fa-phone"></i>
+                </div>
+
+                <div>
+
+                    <span>
+                        Contacted
+                    </span>
+
+                    <strong id="contactedQuotes">
+                        0
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    <i class="fa-solid fa-spinner"></i>
+                </div>
+
+                <div>
+
+                    <span>
+                        Processing
+                    </span>
+
+                    <strong id="processingQuotes">
+                        0
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+
+                <div>
+
+                    <span>
+                        Completed
+                    </span>
+
+                    <strong id="completedQuotes">
+                        0
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- RECENT REQUESTS -->
+
+        <div class="admin-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <span>
+                        CUSTOMER ENQUIRIES
+                    </span>
+
+                    <h2>
+                        Recent Quote Requests
+                    </h2>
+
+                </div>
+
+                <button
+                    class="panel-button"
+                    id="viewAllQuotes"
+                >
+                    View All
+                </button>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Reference
+                            </th>
+
+                            <th>
+                                Customer
+                            </th>
+
+                            <th>
+                                Service
+                            </th>
+
+                            <th>
+                                Route
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="recentQuotesTable">
+
+                        <tr>
+
+                            <td colspan="5">
+                                Loading...
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================
+         QUOTES SECTION
+    ====================================== -->
+
+    <section
+        id="quotesSection"
+        class="admin-section"
+    >
+
+        <div class="section-heading">
+
+            <span>
+                CUSTOMER MANAGEMENT
+            </span>
+
+            <h2>
+                Quote Requests
+            </h2>
+
+            <p>
+                Review and manage customer shipment enquiries.
+            </p>
+
+        </div>
+
+
+        <div class="admin-panel">
+
+            <div class="quote-toolbar">
+
+                <input
+                    type="search"
+                    id="quoteSearch"
+                    placeholder="Search customer, reference or service..."
+                >
+
+                <select id="statusFilter">
+
+                    <option value="all">
+                        All Statuses
+                    </option>
+
+                    <option value="New">
+                        New
+                    </option>
+
+                    <option value="Contacted">
+                        Contacted
+                    </option>
+
+                    <option value="Processing">
+                        Processing
+                    </option>
+
+                    <option value="Completed">
+                        Completed
+                    </option>
+
+                    <option value="Cancelled">
+                        Cancelled
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Reference
+                            </th>
+
+                            <th>
+                                Customer
+                            </th>
+
+                            <th>
+                                Contact
+                            </th>
+
+                            <th>
+                                Service
+                            </th>
+
+                            <th>
+                                Route
+                            </th>
+
+                            <th>
+                                Date
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="quotesTable">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================
+         SERVICES SECTION
+    ====================================== -->
+
+    <section
+        id="servicesSection"
+        class="admin-section"
+    >
+
+        <div class="section-heading">
+
+            <span>
+                AJB IMPORTS
+            </span>
+
+            <h2>
+                Logistics Services
+            </h2>
+
+            <p>
+                Your core logistics service categories.
+            </p>
+
+        </div>
+
+
+        <div class="service-admin-grid">
+
+            <div class="service-admin-card">
+
+                <i class="fa-solid fa-ship"></i>
+
+                <h3>
+                    Sea Freight
+                </h3>
+
+                <p>
+                    Reliable international shipping
+                    through major sea routes.
+                </p>
+
+            </div>
+
+
+            <div class="service-admin-card">
+
+                <i class="fa-solid fa-plane"></i>
+
+                <h3>
+                    Air Freight
+                </h3>
+
+                <p>
+                    Fast international air cargo
+                    transportation.
+                </p>
+
+            </div>
+
+
+            <div class="service-admin-card">
+
+                <i class="fa-solid fa-truck"></i>
+
+                <h3>
+                    Road Transport
+                </h3>
+
+                <p>
+                    Efficient inland transportation
+                    across Ghana.
+                </p>
+
+            </div>
+
+
+            <div class="service-admin-card">
+
+                <i class="fa-solid fa-boxes-stacked"></i>
+
+                <h3>
+                    Warehousing
+                </h3>
+
+                <p>
+                    Secure storage and cargo
+                    handling solutions.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<script src="/admin.js"></script>
+
+</body>
+
+</html>
