@@ -3,20 +3,28 @@ services:
     name: ajb-imports
     runtime: node
     plan: starter
-    buildCommand: npm ci
+    buildCommand: npm install
     startCommand: node server.js
     healthCheckPath: /api/status
     envVars:
       - key: NODE_ENV
         value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: ADMIN_EMAIL
+        value: admin@ajbimports.com
+      - key: ADMIN_PASSWORD_HASH
+        value: ""
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        value: your-email@gmail.com
+      - key: SMTP_PASS
+        value: your-gmail-app-password
       - key: GOOGLE_DATA_DIR
         value: /var/data
-      - key: GOOGLE_SHEET_ID
-        value: https://docs.google.com/spreadsheets/d/1JO6Qhr83CIOrO5Ps25EVgJiW-A6pislD/edit?gid=158840977#gid=158840977
-      - key: GOOGLE_SERVICE_ACCOUNT_JSON
-        value: ""
-      - key: GOOGLE_SHEET_TAB
-        value: Quote Submissions
     disk:
       name: quote-submissions
       mountPath: /var/data

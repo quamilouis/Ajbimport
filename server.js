@@ -91,7 +91,7 @@ function requireAdmin(req, res, next) {
 
 app.use(
     express.static(
-        path.join(__dirname, "public")
+        path.join(__dirname)
     )
 );
 
@@ -116,7 +116,6 @@ app.get("/admin/login", (req, res) => {
     res.sendFile(
         path.join(
             __dirname,
-            "public",
             "admin-login.html"
         )
     );
@@ -136,7 +135,6 @@ app.get(
         res.sendFile(
             path.join(
                 __dirname,
-                "public",
                 "admin.html"
             )
         );
