@@ -1,12 +1,12 @@
 /* =========================================================
    AJB IMPORTS
    ADMIN AUTHENTICATION
-========================================================= */
+   Login, Forgot Password, Reset Password
+======================================================== */
 
 document.addEventListener(
     "DOMContentLoaded",
     () => {
-
 
         /* =====================================================
            MESSAGE HELPER
@@ -33,54 +33,70 @@ document.addEventListener(
 
 
         /* =====================================================
-           PASSWORD VISIBILITY
+           PASSWORD VISIBILITY TOGGLE
         ===================================================== */
 
-        const togglePassword =
-            document.getElementById(
-                "togglePassword"
-            );
-
-        const password =
-            document.getElementById(
-                "password"
-            );
-
-
-        if (
-            togglePassword &&
-            password
+        function initPasswordToggle(
+            inputId,
+            buttonId
         ) {
 
-            togglePassword.addEventListener(
-                "click",
-                () => {
+            const toggle =
+                document.getElementById(
+                    buttonId
+                );
 
-                    const isPassword =
-                        password.type === "password";
-
-
-                    password.type =
-                        isPassword
-                            ? "text"
-                            : "password";
+            const input =
+                document.getElementById(
+                    inputId
+                );
 
 
-                    togglePassword.innerHTML =
-                        isPassword
+            if (
+                toggle &&
+                input
+            ) {
 
-                            ? '<i class="fa-solid fa-eye-slash"></i>'
+                toggle.addEventListener(
+                    "click",
+                    () => {
 
-                            : '<i class="fa-solid fa-eye"></i>';
+                        const isPassword =
+                            input.type ===
+                            "password";
 
-                }
-            );
+
+                        input.type =
+                            isPassword
+                                ? "text"
+                                : "password";
+
+
+                        const icon =
+                            toggle.querySelector(
+                                "i"
+                            );
+
+
+                        if (icon) {
+
+                            icon.className =
+                                isPassword
+                                    ? "fa-solid fa-eye"
+                                    : "fa-solid fa-eye-slash";
+
+                        }
+
+                    }
+                );
+
+            }
 
         }
 
 
         /* =====================================================
-           PASSWORD VALIDATION
+           PASSWORD STRENGTH METER
         ===================================================== */
 
         function validatePassword(
@@ -172,9 +188,7 @@ document.addEventListener(
 
                         score++;
 
-                    }
-
-                    else {
+                    } else {
 
                         element.classList.add(
                             "invalid"
@@ -219,16 +233,12 @@ document.addEventListener(
                 bar.style.background =
                     "#d93025";
 
-            }
-
-            else if (score <= 3) {
+            } else if (score <= 3) {
 
                 bar.style.background =
                     "#f9ab00";
 
-            }
-
-            else {
+            } else {
 
                 bar.style.background =
                     "#188038";
@@ -238,33 +248,23 @@ document.addEventListener(
         }
 
 
-        if (password) {
-
-            password.addEventListener(
-                "input",
-                () => {
-
-                    updatePasswordStrength(
-                        password.value
-                    );
-
-                }
-            );
-
-        }
-
-
         /* =====================================================
-           LOGIN
+           LOGIN PAGE
         ===================================================== */
 
         const loginForm =
             document.getElementById(
-                "loginForm"
+                "adminLoginForm"
             );
 
 
         if (loginForm) {
+
+            initPasswordToggle(
+                "password",
+                "togglePassword"
+            );
+
 
             loginForm.addEventListener(
                 "submit",
@@ -278,12 +278,10 @@ document.addEventListener(
                             "loginButton"
                         );
 
-
                     const email =
                         document.getElementById(
                             "email"
                         ).value.trim();
-
 
                     const passwordValue =
                         document.getElementById(
@@ -356,9 +354,7 @@ document.addEventListener(
                             600
                         );
 
-                    }
-
-                    catch (error) {
+                    } catch (error) {
 
                         showMessage(
                             error.message
@@ -371,7 +367,8 @@ document.addEventListener(
                                 false;
 
                             button.innerHTML =
-                                '<i class="fa-solid fa-right-to-bracket"></i> <span>Sign In</span>';
+                                '<span>Sign In</span>' +
+                                '<i class="fa-solid fa-arrow-right"></i>';
 
                         }
 
@@ -384,188 +381,7 @@ document.addEventListener(
 
 
         /* =====================================================
-           REGISTRATION
-        ===================================================== */
-
-        const registerForm =
-            document.getElementById(
-                "registerForm"
-            );
-
-
-        if (registerForm) {
-
-            registerForm.addEventListener(
-                "submit",
-                async event => {
-
-                    event.preventDefault();
-
-
-                    const fullName =
-                        document.getElementById(
-                            "fullName"
-                        ).value.trim();
-
-
-                    const email =
-                        document.getElementById(
-                            "email"
-                        ).value.trim();
-
-
-                    const passwordValue =
-                        document.getElementById(
-                            "password"
-                        ).value;
-
-
-                    const confirmPassword =
-                        document.getElementById(
-                            "confirmPassword"
-                        ).value;
-
-
-                    const validation =
-                        validatePassword(
-                            passwordValue
-                        );
-
-
-                    if (
-                        !Object.values(
-                            validation
-                        ).every(Boolean)
-                    ) {
-
-                        showMessage(
-                            "Please create a stronger password."
-                        );
-
-                        return;
-
-                    }
-
-
-                    if (
-                        passwordValue !==
-                        confirmPassword
-                    ) {
-
-                        showMessage(
-                            "Passwords do not match."
-                        );
-
-                        return;
-
-                    }
-
-
-                    const button =
-                        document.getElementById(
-                            "registerButton"
-                        );
-
-
-                    if (button) {
-
-                        button.disabled = true;
-
-                        button.innerHTML =
-                            '<i class="fa-solid fa-spinner fa-spin"></i> Creating Account...';
-
-                    }
-
-
-                    try {
-
-                        const response =
-                            await fetch(
-                                "/api/admin/register",
-                                {
-
-                                    method: "POST",
-
-                                    headers: {
-                                        "Content-Type":
-                                            "application/json"
-                                    },
-
-                                    body:
-                                        JSON.stringify({
-                                            fullName,
-                                            email,
-                                            password:
-                                                passwordValue
-                                        })
-
-                                }
-                            );
-
-
-                        const result =
-                            await response.json();
-
-
-                        if (!response.ok) {
-
-                            throw new Error(
-                                result.message ||
-                                "Registration failed."
-                            );
-
-                        }
-
-
-                        showMessage(
-                            "Administrator account created successfully. Redirecting to login...",
-                            "success"
-                        );
-
-
-                        registerForm.reset();
-
-
-                        setTimeout(
-                            () => {
-
-                                window.location.href =
-                                    "/admin-login.html";
-
-                            },
-                            1500
-                        );
-
-                    }
-
-                    catch (error) {
-
-                        showMessage(
-                            error.message
-                        );
-
-
-                        if (button) {
-
-                            button.disabled =
-                                false;
-
-
-                            button.innerHTML =
-                                '<i class="fa-solid fa-user-plus"></i> Create Administrator';
-
-                        }
-
-                    }
-
-                }
-            );
-
-        }
-
-
-        /* =====================================================
-           FORGOT PASSWORD
+           FORGOT PASSWORD PAGE
         ===================================================== */
 
         const forgotForm =
@@ -575,6 +391,33 @@ document.addEventListener(
 
 
         if (forgotForm) {
+
+            const passwordInput =
+                document.getElementById(
+                    "password"
+                );
+
+
+            if (passwordInput) {
+
+                initPasswordToggle(
+                    "password",
+                    "togglePassword"
+                );
+
+                passwordInput.addEventListener(
+                    "input",
+                    () => {
+
+                        updatePasswordStrength(
+                            passwordInput.value
+                        );
+
+                    }
+                );
+
+            }
+
 
             forgotForm.addEventListener(
                 "submit",
@@ -588,7 +431,6 @@ document.addEventListener(
                             "email"
                         ).value.trim();
 
-
                     const button =
                         document.getElementById(
                             "forgotButton"
@@ -597,9 +439,7 @@ document.addEventListener(
 
                     if (button) {
 
-                        button.disabled =
-                            true;
-
+                        button.disabled = true;
 
                         button.innerHTML =
                             '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
@@ -634,15 +474,6 @@ document.addEventListener(
                             await response.json();
 
 
-                        /*
-                         * We intentionally display
-                         * a generic message.
-                         *
-                         * This prevents attackers
-                         * from discovering which
-                         * emails belong to admins.
-                         */
-
                         if (!response.ok) {
 
                             throw new Error(
@@ -662,22 +493,25 @@ document.addEventListener(
                         forgotForm.reset();
 
 
-                    }
+                        if (passwordInput) {
 
-                    catch (error) {
+                            updatePasswordStrength(
+                                ""
+                            );
+
+                        }
+
+                    } catch (error) {
 
                         showMessage(
                             error.message
                         );
 
-                    }
-                    finally {
+                    } finally {
 
                         if (button) {
 
-                            button.disabled =
-                                false;
-
+                            button.disabled = false;
 
                             button.innerHTML =
                                 '<i class="fa-solid fa-paper-plane"></i> Send Reset Link';
@@ -693,7 +527,7 @@ document.addEventListener(
 
 
         /* =====================================================
-           RESET PASSWORD
+           RESET PASSWORD PAGE
         ===================================================== */
 
         const resetForm =
@@ -704,6 +538,79 @@ document.addEventListener(
 
         if (resetForm) {
 
+            const urlParams =
+                new URLSearchParams(
+                    window.location.search
+                );
+
+
+            const token =
+                urlParams.get(
+                    "token"
+                );
+
+
+            if (!token) {
+
+                const messageBox =
+                    document.getElementById(
+                        "authMessage"
+                    );
+
+
+                if (messageBox) {
+
+                    messageBox.textContent =
+                        "This password reset link is invalid or incomplete.";
+
+                    messageBox.className =
+                        "message show error";
+
+                }
+
+
+                const resetButton =
+                    document.getElementById(
+                        "resetButton"
+                    );
+
+
+                if (resetButton) {
+
+                    resetButton.disabled = true;
+
+                }
+
+            }
+
+
+            const passwordInput =
+                document.getElementById(
+                    "password"
+                );
+
+
+            if (passwordInput) {
+
+                initPasswordToggle(
+                    "password",
+                    "togglePassword"
+                );
+
+                passwordInput.addEventListener(
+                    "input",
+                    () => {
+
+                        updatePasswordStrength(
+                            passwordInput.value
+                        );
+
+                    }
+                );
+
+            }
+
+
             resetForm.addEventListener(
                 "submit",
                 async event => {
@@ -711,39 +618,20 @@ document.addEventListener(
                     event.preventDefault();
 
 
-                    const urlParams =
-                        new URLSearchParams(
-                            window.location.search
-                        );
-
-
-                    const token =
-                        urlParams.get(
-                            "token"
-                        );
-
-
-                    if (!token) {
-
-                        showMessage(
-                            "This password reset link is invalid or incomplete."
-                        );
-
-                        return;
-
-                    }
-
-
                     const passwordValue =
                         document.getElementById(
                             "password"
                         ).value;
 
-
                     const confirmPassword =
                         document.getElementById(
                             "confirmPassword"
                         ).value;
+
+                    const button =
+                        document.getElementById(
+                            "resetButton"
+                        );
 
 
                     const validation =
@@ -781,17 +669,9 @@ document.addEventListener(
                     }
 
 
-                    const button =
-                        document.getElementById(
-                            "resetButton"
-                        );
-
-
                     if (button) {
 
-                        button.disabled =
-                            true;
-
+                        button.disabled = true;
 
                         button.innerHTML =
                             '<i class="fa-solid fa-spinner fa-spin"></i> Resetting...';
@@ -847,6 +727,15 @@ document.addEventListener(
                         resetForm.reset();
 
 
+                        if (passwordInput) {
+
+                            updatePasswordStrength(
+                                ""
+                            );
+
+                        }
+
+
                         setTimeout(
                             () => {
 
@@ -857,9 +746,7 @@ document.addEventListener(
                             1500
                         );
 
-                    }
-
-                    catch (error) {
+                    } catch (error) {
 
                         showMessage(
                             error.message
@@ -868,9 +755,7 @@ document.addEventListener(
 
                         if (button) {
 
-                            button.disabled =
-                                false;
-
+                            button.disabled = false;
 
                             button.innerHTML =
                                 '<i class="fa-solid fa-shield-halved"></i> Reset Password';

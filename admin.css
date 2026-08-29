@@ -1347,3 +1347,34 @@ td {
     }
 
 }
+.auth-links {
+
+    margin-top: 18px;
+
+    text-align: center;
+
+}
+
+
+.auth-links a {
+
+    color: var(--ajb-yellow-dark);
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    text-decoration: none;
+
+}
+
+
+.auth-links a:hover {
+
+    color: var(--ajb-yellow);
+
+    text-decoration: underline;
+
+}
+
+
