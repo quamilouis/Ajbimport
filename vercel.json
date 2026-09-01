@@ -11,8 +11,5 @@
       "src": "/(.*)",
       "dest": "/server.js"
     }
-  ],
-  "env": {
-    "GOOGLE_DATA_DIR": "/tmp"
-  }
+  ]
 }

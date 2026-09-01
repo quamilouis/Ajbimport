@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Blog & News | AJB Imports</title>
+
+    <meta
+        name="description"
+        content="Latest news, logistics updates, import tips and company announcements from AJB Imports Ghana."
+    >
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="blog.css">
+</head>
+
+<body class="blog-page">
+
+<!-- ==============================
+     HEADER
+================================ -->
+
+<header class="header" id="header">
+
+    <div class="container nav-container">
+
+        <a href="index.html" class="logo">
+            <img
+                src="ajb-logo.png"
+                alt="AJB Imports"
+            >
+        </a>
+
+        <nav class="desktop-navigation">
+
+            <a href="index.html">Home</a>
+
+            <a href="service.html">
+                Services
+            </a>
+
+            <a href="about.html">
+                About Us
+            </a>
+
+            <a href="blog.html" class="active">
+                Blog
+            </a>
+
+            <a href="contact.html">
+                Contact
+            </a>
+
+        </nav>
+
+        <a
+            href="contact.html"
+            class="nav-cta"
+        >
+            Get a Quote
+        </a>
+
+        <button
+            id="mobileMenuBtn"
+            class="mobile-menu-btn"
+            aria-label="Open menu"
+        >
+            <i class="fa-solid fa-bars"></i>
+        </button>
+
+    </div>
+
+    <div
+        id="mobileNavigation"
+        class="mobile-navigation"
+    >
+
+        <a href="index.html">Home</a>
+        <a href="service.html">Services</a>
+        <a href="about.html">About Us</a>
+        <a href="blog.html">Blog</a>
+        <a href="contact.html">Contact</a>
+
+        <a
+            href="contact.html"
+            class="mobile-quote-btn"
+        >
+            Get a Quote
+        </a>
+
+    </div>
+
+</header>
+
+
+<!-- ==============================
+     BLOG HERO
+================================ -->
+
+<section class="blog-hero">
+
+    <div class="container">
+
+        <span class="section-kicker">
+            AJB Imports Insights
+        </span>
+
+        <h1>
+            News, Insights &amp;
+            <span>Logistics Stories</span>
+        </h1>
+
+        <p>
+            Stay informed with shipping updates, import
+            and logistics insights, company news and
+            practical tips from AJB Imports.
+        </p>
+
+    </div>
+
+</section>
+
+
+<!-- ==============================
+     BLOG CONTENT
+================================ -->
+
+<div class="blog-heading">
+
+    <div>
+        <h2>All Articles</h2>
+
+        <p>
+            Find our latest logistics insights,
+            import tips, company news and shipping updates.
+        </p>
+    </div>
+
+</div>
+
+<div class="blog-controls">
+
+    <div class="blog-search">
+
+        <i class="fa-solid fa-search"></i>
+
+        <input
+            type="search"
+            id="blogSearch"
+            placeholder="Search articles..."
+            aria-label="Search articles"
+        >
+
+    </div>
+
+    <div class="blog-categories">
+
+        <button
+            class="category-btn active"
+            data-category="all"
+        >
+            All Articles
+        </button>
+
+        <button
+            class="category-btn"
+            data-category="company"
+        >
+            Company
+        </button>
+
+        <button
+            class="category-btn"
+            data-category="logistics"
+        >
+            Logistics
+        </button>
+
+        <button
+            class="category-btn"
+            data-category="import"
+        >
+            Import &amp; Export
+        </button>
+
+        <button
+            class="category-btn"
+            data-category="tips"
+        >
+            Shipping Tips
+        </button>
+
+    </div>
+
+</div>
+<!-- ==============================
+     NEWSLETTER
+================================ -->
+
+<section class="newsletter-section">
+
+    <div class="container">
+
+        <div class="newsletter-box">
+
+            <div class="newsletter-content">
+
+                <span class="section-kicker">
+                    Stay Connected
+                </span>
+
+                <h2>
+                    Get AJB Imports Updates
+                    <span>Directly in Your Inbox</span>
+                </h2>
+
+                <p>
+                    Subscribe to receive company news,
+                    logistics tips, import insights and
+                    important shipping updates.
+                </p>
+
+            </div>
+
+
+            <form
+                id="newsletterForm"
+                class="newsletter-form"
+            >
+
+                <div class="newsletter-input">
+
+                    <i class="fa-regular fa-user"></i>
+
+                    <input
+                        type="text"
+                        name="name"
+                        placeholder="Your name"
+                        required
+                    >
+
+                </div>
+
+                <div class="newsletter-input">
+
+                    <i class="fa-regular fa-envelope"></i>
+
+                    <input
+                        type="email"
+                        name="email"
+                        placeholder="Your email address"
+                        required
+                    >
+
+                </div>
+
+                <button
+                    type="submit"
+                    id="subscribeBtn"
+                >
+
+                    <span>
+                        Subscribe
+                    </span>
+
+                    <i class="fa-solid fa-arrow-right"></i>
+
+                </button>
+
+                <div
+                    id="subscriptionMessage"
+                    class="subscription-message"
+                ></div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ==============================
+     FOOTER
+================================ -->
+
+<footer class="footer">
+
+    <div class="container">
+
+        <div class="footer-grid">
+
+            <div>
+
+                <img
+                    src="ajb-logo.png"
+                    alt="AJB Imports"
+                    class="footer-logo"
+                >
+
+                <p>
+                    Reliable import, logistics
+                    and shipping solutions built
+                    for businesses and individuals.
+                </p>
+
+            </div>
+
+
+            <div>
+
+                <h4>
+                    Quick Links
+                </h4>
+
+                <a href="index.html">Home</a>
+                <a href="service.html">Services</a>
+                <a href="about.html">About Us</a>
+                <a href="blog.html">Blog</a>
+                <a href="contact.html">Contact</a>
+
+            </div>
+
+
+            <div>
+
+                <h4>
+                    Legal
+                </h4>
+
+                <a href="privacy-policy.html">
+                    Privacy Policy
+                </a>
+
+                <a href="terms-of-service.html">
+                    Terms of Service
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <div class="footer-bottom">
+
+            <p>
+                ©
+                <span id="currentYear"></span>
+                AJB Imports.
+                All rights reserved.
+            </p>
+
+        </div>
+
+    </div>
+
+</footer>
+
+
+<script src="scripts.js"></script>
+
+</body>
+</html>

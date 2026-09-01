@@ -24,6 +24,9 @@
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     >
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js">
+    </script>
+
 </head>
 
 <body class="dashboard-page">
@@ -102,6 +105,40 @@
 
             <span>
                 Services
+            </span>
+
+        </a>
+
+
+        <a
+            href="#"
+            class="nav-item"
+            data-section="blog"
+        >
+
+            <i class="fa-solid fa-newspaper"></i>
+
+            <span>
+                Blog Posts
+            </span>
+
+            <b id="sidebarBlogCount">
+                0
+            </b>
+
+        </a>
+
+
+        <a
+            href="#"
+            class="nav-item"
+            data-section="sheets"
+        >
+
+            <i class="fa-solid fa-sheet"></i>
+
+            <span>
+                Google Sheets
             </span>
 
         </a>
@@ -339,6 +376,273 @@
                     <strong id="completedQuotes">
                         0
                     </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- CHARTS -->
+
+        <div class="charts-grid">
+
+            <div class="admin-panel chart-panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <span>
+                            ANALYTICS
+                        </span>
+
+                        <h2>
+                            Status Breakdown
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <div class="chart-container">
+
+                    <canvas id="statusChart">
+                    </canvas>
+
+                </div>
+
+            </div>
+
+
+            <div class="admin-panel chart-panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <span>
+                            ANALYTICS
+                        </span>
+
+                        <h2>
+                            Recent Activity
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <div class="chart-container">
+
+                    <canvas id="activityChart">
+                    </canvas>
+
+                </div>
+
+            </div>
+
+
+            <div class="admin-panel chart-panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <span>
+                            ANALYTICS
+                        </span>
+
+                        <h2>
+                            Top Services
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <div class="chart-container">
+
+                    <canvas id="servicesChart">
+                    </canvas>
+
+                </div>
+
+            </div>
+
+
+            <div class="admin-panel chart-panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <span>
+                            ANALYTICS
+                        </span>
+
+                        <h2>
+                            Top Routes
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <div class="chart-container">
+
+                    <canvas id="routesChart">
+                    </canvas>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- QUICK ACTIONS & EXPORT -->
+
+        <div class="actions-row">
+
+            <div class="admin-panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <span>
+                            TOOLS
+                        </span>
+
+                        <h2>
+                            Quick Actions
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <div class="action-buttons">
+
+                    <button
+                        class="action-button"
+                        id="exportCSV"
+                    >
+
+                        <i class="fa-solid fa-file-csv"></i>
+
+                        Export Quotes (CSV)
+
+                    </button>
+
+
+                    <button
+                        class="action-button"
+                        id="refreshData"
+                    >
+
+                        <i class="fa-solid fa-arrows-rotate"></i>
+
+                        Refresh Data
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="admin-panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <span>
+                            INSIGHTS
+                        </span>
+
+                        <h2>
+                            Key Metrics
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <div class="insights-list">
+
+                    <div class="insight-item">
+
+                        <span class="insight-label">
+                            Completion Rate
+                        </span>
+
+                        <strong id="completionRate">
+                            -
+                        </strong>
+
+                    </div>
+
+
+                    <div class="insight-item">
+
+                        <span class="insight-label">
+                            Avg. Per Day
+                        </span>
+
+                        <strong id="avgPerDay">
+                            -
+                        </strong>
+
+                    </div>
+
+
+                    <div class="insight-item">
+
+                        <span class="insight-label">
+                            Top Service
+                        </span>
+
+                        <strong id="topService">
+                            -
+                        </strong>
+
+                    </div>
+
+
+                    <div class="insight-item">
+
+                        <span class="insight-label">
+                            Top Route
+                        </span>
+
+                        <strong id="topRoute">
+                            -
+                        </strong>
+
+                    </div>
+
+
+                    <div class="insight-item">
+
+                        <span class="insight-label">
+                            Last Updated
+                        </span>
+
+                        <strong id="lastUpdated">
+                            -
+                        </strong>
+
+                    </div>
 
                 </div>
 
@@ -645,11 +949,597 @@
 
     </section>
 
+
+    <!-- =====================================
+         BLOG SECTION
+    ====================================== -->
+
+    <section
+        id="blogSection"
+        class="admin-section"
+    >
+
+        <div class="section-heading">
+
+            <span>
+                CONTENT MANAGEMENT
+            </span>
+
+            <h2>
+                Blog Posts
+            </h2>
+
+            <p>
+                Create, edit and publish articles
+                for the public blog.
+            </p>
+
+        </div>
+
+
+        <div class="admin-panel">
+
+            <div class="quote-toolbar">
+
+                <input
+                    type="search"
+                    id="blogAdminSearch"
+                    placeholder="Search blog posts..."
+                >
+
+                <select id="blogStatusFilter">
+
+                    <option value="all">
+                        All Status
+                    </option>
+
+                    <option value="published">
+                        Published
+                    </option>
+
+                    <option value="draft">
+                        Drafts
+                    </option>
+
+                    <option value="featured">
+                        Featured
+                    </option>
+
+                </select>
+
+                <button
+                    class="action-button"
+                    id="newBlogPost"
+                >
+
+                    <i class="fa-solid fa-plus"></i>
+
+                    New Post
+
+                </button>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Title
+                            </th>
+
+                            <th>
+                                Category
+                            </th>
+
+                            <th>
+                                Author
+                            </th>
+
+                            <th>
+                                Date
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th>
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="blogAdminTable">
+
+                        <tr>
+
+                            <td colspan="6">
+                                Loading...
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================
+         GOOGLE SHEETS SECTION
+    ====================================== -->
+
+    <section
+        id="sheetsSection"
+        class="admin-section"
+    >
+
+        <div class="section-heading">
+
+            <span>
+                INTEGRATION
+            </span>
+
+            <h2>
+                Google Sheets
+            </h2>
+
+            <p>
+                Sync and manage quote submissions
+                stored in your connected Google Sheet.
+            </p>
+
+        </div>
+
+
+        <!-- =====================================
+             CONNECTION STATUS
+        ====================================== -->
+
+        <div class="admin-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <span>
+                        CONNECTION
+                    </span>
+
+                    <h2>
+                        Connection Status
+                    </h2>
+
+                </div>
+
+            </div>
+
+            <div
+                id="sheetsStatus"
+                class="sheets-status"
+            >
+
+                <div class="sheets-status-row">
+
+                    <span class="status-label">
+                        Status
+                    </span>
+
+                    <span class="status-value status-not-configured" id="sheetsConnectionStatus">
+                        Checking...
+                    </span>
+
+                </div>
+
+                <div class="sheets-status-row">
+
+                    <span class="status-label">
+                        Spreadsheet ID
+                    </span>
+
+                    <span class="status-value" id="sheetsIdValue">
+                        -
+                    </span>
+
+                </div>
+
+                <div class="sheets-status-row">
+
+                    <span class="status-label">
+                        Worksheet
+                    </span>
+
+                    <span class="status-value" id="sheetsTabValue">
+                        -
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================
+             SYNC & SUBMISSIONS
+        ====================================== -->
+
+        <div class="admin-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <span>
+                        MANAGEMENT
+                    </span>
+
+                    <h2>
+                        Submissions
+                    </h2>
+
+                </div>
+
+                <div class="sheets-toolbar">
+
+                    <button
+                        class="panel-button"
+                        id="syncFromSheets"
+                    >
+
+                        <i class="fa-solid fa-sync"></i>
+
+                        Sync from Sheet
+
+                    </button>
+
+                    <button
+                        class="panel-button"
+                        id="refreshSheets"
+                    >
+
+                        <i class="fa-solid fa-arrows-rotate"></i>
+
+                        Refresh
+
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div
+                id="sheetsMessage"
+                class="message"
+            ></div>
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Row
+                            </th>
+
+                            <th>
+                                Customer
+                            </th>
+
+                            <th>
+                                Email
+                            </th>
+
+                            <th>
+                                Service
+                            </th>
+
+                            <th>
+                                Route
+                            </th>
+
+                            <th>
+                                Date
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th>
+                                Notes
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="sheetsSubmissionsTable">
+
+                        <tr>
+
+                            <td colspan="8">
+                                Loading submissions...
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================
+         BLOG EDITOR MODAL
+    ====================================== -->
+
+    <div
+        id="blogEditorModal"
+        class="blog-modal"
+        hidden
+    >
+
+        <div class="blog-modal-card">
+
+            <div class="blog-modal-header">
+
+                <h3 id="blogEditorTitle">
+                    New Blog Post
+                </h3>
+
+                <button
+                    type="button"
+                    id="closeBlogEditor"
+                >
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                </button>
+
+            </div>
+
+
+            <form
+                id="blogPostForm"
+                class="blog-form"
+            >
+
+                <input
+                    type="hidden"
+                    id="blogPostId"
+                >
+
+
+                <div class="blog-form-row">
+
+                    <div class="blog-form-group">
+
+                        <label>
+                            Title
+                        </label>
+
+                        <input
+                            type="text"
+                            id="blogTitle"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="blog-form-group">
+
+                        <label>
+                            Slug
+                            <small>
+                                (optional)
+                            </small>
+                        </label>
+
+                        <input
+                            type="text"
+                            id="blogSlug"
+                            placeholder="auto-generated-from-title"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="blog-form-row">
+
+                    <div class="blog-form-group">
+
+                        <label>
+                            Category
+                        </label>
+
+                        <select id="blogCategory">
+
+                            <option value="company">
+                                Company News
+                            </option>
+
+                            <option value="logistics">
+                                Logistics
+                            </option>
+
+                            <option value="import">
+                                Import &amp; Export
+                            </option>
+
+                            <option value="tips">
+                                Shipping Tips
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="blog-form-group">
+
+                        <label>
+                            Author
+                        </label>
+
+                        <input
+                            type="text"
+                            id="blogAuthor"
+                            value="AJB Imports"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="blog-form-group">
+
+                    <label>
+                        Cover Image URL
+                    </label>
+
+                    <input
+                        type="url"
+                        id="blogImage"
+                        placeholder="Cargo-Truck-5.jpg"
+                    >
+
+                </div>
+
+
+                <div class="blog-form-group">
+
+                    <label>
+                        Excerpt
+                    </label>
+
+                    <textarea
+                        id="blogExcerpt"
+                        rows="3"
+                        placeholder="Short summary shown in the blog list..."
+                    ></textarea>
+
+                </div>
+
+
+                <div class="blog-form-group">
+
+                    <label>
+                        Content
+                    </label>
+
+                    <textarea
+                        id="blogContent"
+                        rows="10"
+                        required
+                        placeholder="Write your article content here..."
+                    ></textarea>
+
+                </div>
+
+
+                <div class="blog-form-options">
+
+                    <label class="blog-checkbox">
+
+                        <input
+                            type="checkbox"
+                            id="blogPublished"
+                            checked
+                        >
+
+                        <span>
+                            Published
+                        </span>
+
+                    </label>
+
+
+                    <label class="blog-checkbox">
+
+                        <input
+                            type="checkbox"
+                            id="blogFeatured"
+                        >
+
+                        <span>
+                            Featured
+                        </span>
+
+                    </label>
+
+                </div>
+
+
+                <div
+                    id="blogEditorMessage"
+                    class="login-message"
+                ></div>
+
+
+                <div class="blog-form-actions">
+
+                    <button
+                        type="button"
+                        class="action-button"
+                        id="cancelBlogEditor"
+                    >
+
+                        Cancel
+
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="login-button"
+                        id="saveBlogPost"
+                    >
+
+                        <i class="fa-solid fa-floppy-disk"></i>
+
+                        Save Post
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
 </main>
 
 
 <script src="/admin.js"></script>
 <script src="/admin-auth.js"></script>
+<script src="/setup-admin.js"></script>
 
 </body>
 

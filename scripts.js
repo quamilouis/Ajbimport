@@ -1709,3 +1709,789 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
 });
+
+/* =========================================
+   AJB IMPORT
+   BLOG + SUBSCRIPTION
+========================================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const year = document.getElementById("currentYear");
+
+    if (year) {
+        year.textContent = new Date().getFullYear();
+    }
+
+    const blogGrid =
+        document.getElementById("blogGrid");
+
+    const featuredArticle =
+        document.getElementById("featuredArticle");
+
+    const searchInput =
+        document.getElementById("blogSearch");
+
+    const categoryButtons =
+        document.querySelectorAll(".category-btn");
+
+    const noArticles =
+        document.getElementById("noArticles");
+
+    const newsletterForm =
+        document.getElementById("newsletterForm");
+
+    const subscriptionMessage =
+        document.getElementById(
+            "subscriptionMessage"
+        );
+
+    const subscribeBtn =
+        document.getElementById("subscribeBtn");
+
+
+    let articles = [];
+
+    let currentCategory = "all";
+
+
+    /* =====================================
+       MOBILE MENU
+    ===================================== */
+
+    const mobileMenuBtn =
+        document.getElementById(
+            "mobileMenuBtn"
+        );
+
+    const mobileNavigation =
+        document.getElementById(
+            "mobileNavigation"
+        );
+
+    if (
+        mobileMenuBtn &&
+        mobileNavigation
+    ) {
+
+        mobileMenuBtn.addEventListener(
+            "click",
+            () => {
+
+                mobileNavigation
+                    .classList
+                    .toggle("active");
+
+            }
+        );
+
+    }
+
+
+    /* =====================================
+       LOAD BLOG
+    ===================================== */
+
+    async function loadArticles() {
+
+        try {
+
+            const response =
+                await fetch("/api/blog");
+
+            if (!response.ok) {
+                throw new Error(
+                    "Unable to load articles."
+                );
+            }
+
+            articles =
+                await response.json();
+
+            renderArticles();
+
+        } catch (error) {
+
+            console.error(error);
+
+            blogGrid.innerHTML = `
+                <div class="blog-loading">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <p>
+                        Unable to load articles.
+                        Please try again later.
+                    </p>
+                </div>
+            `;
+
+        }
+
+    }
+
+
+    /* =====================================
+       RENDER
+    ===================================== */
+
+    function renderArticles() {
+
+        const search =
+            searchInput
+                ? searchInput.value
+                    .trim()
+                    .toLowerCase()
+                : "";
+
+
+        let filtered =
+            articles.filter(article => {
+
+                const matchesCategory =
+                    currentCategory === "all" ||
+                    article.category ===
+                        currentCategory;
+
+                const matchesSearch =
+                    !search ||
+                    article.title
+                        .toLowerCase()
+                        .includes(search) ||
+                    article.excerpt
+                        .toLowerCase()
+                        .includes(search);
+
+                return (
+                    matchesCategory &&
+                    matchesSearch
+                );
+
+            });
+
+
+        renderFeatured(filtered);
+
+        renderGrid(filtered);
+
+    }
+
+
+    /* =====================================
+       FEATURED
+    ===================================== */
+
+    function renderFeatured(list) {
+
+        const featured =
+            list.find(
+                article => article.featured
+            ) || list[0];
+
+
+        if (!featured) {
+
+            featuredArticle.innerHTML = "";
+
+            return;
+
+        }
+
+
+        featuredArticle.innerHTML = `
+
+            <article class="featured-card">
+
+                <div
+                    class="featured-image"
+                    style="
+                        background-image:
+                        url('${escapeHTML(
+                            featured.image
+                        )}')
+                    "
+                ></div>
+
+                <div class="featured-content">
+
+                    <span class="article-category">
+                        ${escapeHTML(
+                            featured.categoryLabel
+                        )}
+                    </span>
+
+                    <h2>
+                        ${escapeHTML(
+                            featured.title
+                        )}
+                    </h2>
+
+                    <p class="article-excerpt">
+                        ${escapeHTML(
+                            featured.excerpt
+                        )}
+                    </p>
+
+                    <div class="article-meta">
+
+                        <span>
+                            <i class="fa-regular fa-calendar"></i>
+                            ${formatDate(
+                                featured.date
+                            )}
+                        </span>
+
+                        <span>
+                            <i class="fa-regular fa-user"></i>
+                            ${escapeHTML(
+                                featured.author
+                            )}
+                        </span>
+
+                    </div>
+
+                    <a
+                        class="read-more"
+                        href="
+                            article.html?slug=
+                            ${encodeURIComponent(
+                                featured.slug
+                            )}
+                        "
+                    >
+                        Read Full Article
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+
+                </div>
+
+            </article>
+
+        `;
+
+    }
+
+
+    /* =====================================
+       GRID
+    ===================================== */
+
+    function renderGrid(list) {
+
+        const nonFeatured =
+            list.filter(
+                article =>
+                    !article.featured
+            );
+
+
+        if (!nonFeatured.length) {
+
+            blogGrid.innerHTML = "";
+
+            noArticles.style.display =
+                list.length
+                    ? "none"
+                    : "block";
+
+            return;
+
+        }
+
+
+        noArticles.style.display = "none";
+
+
+        blogGrid.innerHTML =
+            nonFeatured.map(
+                article => `
+
+                <article class="blog-card">
+
+                    <div
+                        class="blog-image"
+                        style="
+                            background-image:
+                            url('${escapeHTML(
+                                article.image
+                            )}')
+                        "
+                    ></div>
+
+                    <div class="blog-card-content">
+
+                        <span class="article-category">
+                            ${escapeHTML(
+                                article.categoryLabel
+                            )}
+                        </span>
+
+                        <h3>
+                            ${escapeHTML(
+                                article.title
+                            )}
+                        </h3>
+
+                        <p>
+                            ${escapeHTML(
+                                article.excerpt
+                            )}
+                        </p>
+
+                        <div class="article-meta">
+
+                            <span>
+                                ${formatDate(
+                                    article.date
+                                )}
+                            </span>
+
+                        </div>
+
+                        <a
+                            href="
+                                article.html?slug=
+                                ${encodeURIComponent(
+                                    article.slug
+                                )}
+                            "
+                            class="read-more"
+                        >
+                            Read More
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+
+                    </div>
+
+                </article>
+
+            `
+            ).join("");
+
+    }
+
+
+    /* =====================================
+       CATEGORY FILTER
+    ===================================== */
+
+    categoryButtons.forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                categoryButtons
+                    .forEach(btn =>
+                        btn.classList.remove(
+                            "active"
+                        )
+                    );
+
+                button.classList.add("active");
+
+                currentCategory =
+                    button.dataset.category;
+
+                renderArticles();
+
+            }
+        );
+
+    });
+
+
+    /* =====================================
+       SEARCH
+    ===================================== */
+
+    if (searchInput) {
+
+        searchInput.addEventListener(
+            "input",
+            renderArticles
+        );
+
+    }
+
+
+    /* =====================================
+       SUBSCRIBE
+    ===================================== */
+
+    if (newsletterForm) {
+
+        newsletterForm.addEventListener(
+            "submit",
+            async event => {
+
+                event.preventDefault();
+
+
+                const formData =
+                    new FormData(
+                        newsletterForm
+                    );
+
+
+                const data = {
+
+                    name:
+                        formData.get("name"),
+
+                    email:
+                        formData.get("email")
+
+                };
+
+
+                subscribeBtn.disabled = true;
+
+
+                const buttonText =
+                    subscribeBtn.querySelector(
+                        "span"
+                    );
+
+                if (buttonText) {
+                    buttonText.textContent =
+                        "Subscribing...";
+                }
+
+
+                try {
+
+                    const response =
+                        await fetch(
+                            "/api/subscribe",
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body:
+                                    JSON.stringify(data)
+                            }
+                        );
+
+
+                    const result =
+                        await response.json();
+
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            result.message ||
+                            "Subscription failed."
+                        );
+
+                    }
+
+
+                    newsletterForm.reset();
+
+
+                    subscriptionMessage.textContent =
+                        result.message ||
+                        "You have successfully subscribed to AJB Import.";
+
+                    subscriptionMessage.style.display =
+                        "block";
+
+
+                } catch (error) {
+
+                    subscriptionMessage.textContent =
+                        error.message;
+
+                    subscriptionMessage.style.display =
+                        "block";
+
+                } finally {
+
+                    subscribeBtn.disabled =
+                        false;
+
+                    if (buttonText) {
+
+                        buttonText.textContent =
+                            "Subscribe";
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* =====================================
+       HELPERS
+    ===================================== */
+
+    function formatDate(date) {
+
+        return new Date(date)
+            .toLocaleDateString(
+                "en-GH",
+                {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric"
+                }
+            );
+
+    }
+
+
+    function escapeHTML(value) {
+
+        if (!value) return "";
+
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+
+    }
+
+
+    loadArticles();
+
+    const articleDetail = document.getElementById("articleDetail");
+
+    if (articleDetail) {
+        loadArticleDetail();
+    }
+
+});
+
+async function loadArticleDetail() {
+    const articleDetail = document.getElementById("articleDetail");
+    const articleBreadcrumb = document.getElementById("articleBreadcrumb");
+
+    if (!articleDetail) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const slug = params.get("slug");
+
+    if (!slug) {
+        articleDetail.innerHTML = `
+            <div class="article-not-found">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <h2>Article not found</h2>
+                <p>The requested article could not be loaded.</p>
+                <a href="blog.html" class="article-back-link">Back to blog</a>
+            </div>
+        `;
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/blog/${encodeURIComponent(slug)}`);
+
+        if (!response.ok) {
+            throw new Error("Article not found.");
+        }
+
+        const article = await response.json();
+
+        if (articleBreadcrumb) {
+            articleBreadcrumb.textContent = article.title || "Article";
+        }
+
+        const content = article.content || "";
+        const formattedContent = content
+            .replace(/\n{3,}/g, "</p><p>")
+            .replace(/\n/g, "<br>")
+            .trim();
+
+        articleDetail.innerHTML = `
+            <div class="article-hero-image" style="background-image: url('${escapeHTML(article.image || 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=1400&q=80')}')"></div>
+
+            <header class="article-header">
+                <span class="article-category">${escapeHTML(article.categoryLabel || 'Company News')}</span>
+                <h1>${escapeHTML(article.title || 'AJB Import Article')}</h1>
+                <div class="article-meta">
+                    <span><i class="fa-regular fa-calendar"></i> ${formatDate(article.date || article.createdAt || new Date().toISOString())}</span>
+                    <span><i class="fa-regular fa-user"></i> ${escapeHTML(article.author || 'AJB Imports')}</span>
+                </div>
+            </header>
+
+            <div class="article-body">
+                <div class="article-summary">
+                    <p>${escapeHTML(article.excerpt || 'Read more from AJB Imports.')}</p>
+                </div>
+
+                <div class="article-content">
+                    ${formattedContent ? `<p>${formattedContent}</p>` : '<p>Read the latest update from AJB Imports.</p>'}
+                </div>
+
+                <div class="article-actions">
+                    <a href="blog.html" class="article-back-link">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        Back to blog
+                    </a>
+                </div>
+            </div>
+        `;
+
+    } catch (error) {
+        articleDetail.innerHTML = `
+            <div class="article-not-found">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <h2>Article not found</h2>
+                <p>${escapeHTML(error.message || 'The requested article could not be loaded.')}</p>
+                <a href="blog.html" class="article-back-link">Back to blog</a>
+            </div>
+        `;
+    }
+}
+
+/* =========================================
+   BLOG HERO IMAGE CAROUSEL
+========================================= */
+
+const heroSlides =
+    document.querySelectorAll(
+        ".blog-hero-slide"
+    );
+
+const heroDots =
+    document.querySelectorAll(
+        ".hero-dot"
+    );
+
+let heroCurrentSlide = 0;
+
+let heroAutoplay;
+
+
+/* =========================================
+   SHOW HERO SLIDE
+========================================= */
+
+function showHeroSlide(index) {
+
+    if (!heroSlides.length) {
+        return;
+    }
+
+    if (index >= heroSlides.length) {
+        index = 0;
+    }
+
+    if (index < 0) {
+        index = heroSlides.length - 1;
+    }
+
+
+    heroSlides.forEach(
+        (slide, slideIndex) => {
+
+            slide.classList.toggle(
+                "active",
+                slideIndex === index
+            );
+
+        }
+    );
+
+
+    heroDots.forEach(
+        (dot, dotIndex) => {
+
+            dot.classList.toggle(
+                "active",
+                dotIndex === index
+            );
+
+        }
+    );
+
+
+    heroCurrentSlide = index;
+
+}
+
+
+/* =========================================
+   NEXT SLIDE
+========================================= */
+
+function nextHeroSlide() {
+
+    showHeroSlide(
+        heroCurrentSlide + 1
+    );
+
+}
+
+
+/* =========================================
+   AUTOPLAY
+========================================= */
+
+function startHeroAutoplay() {
+
+    heroAutoplay =
+        setInterval(
+            nextHeroSlide,
+            5000
+        );
+
+}
+
+
+/* =========================================
+   RESTART AUTOPLAY
+========================================= */
+
+function restartHeroAutoplay() {
+
+    clearInterval(heroAutoplay);
+
+    startHeroAutoplay();
+
+}
+
+
+/* =========================================
+   DOT NAVIGATION
+========================================= */
+
+heroDots.forEach(
+    (dot, index) => {
+
+        dot.addEventListener(
+            "click",
+            () => {
+
+                showHeroSlide(index);
+
+                restartHeroAutoplay();
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================================
+   START
+========================================= */
+
+if (heroSlides.length) {
+
+    showHeroSlide(0);
+
+    startHeroAutoplay();
+
+}
