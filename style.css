@@ -4762,3 +4762,371 @@ button {
     }
 
 }
+
+/* =====================================================
+   RMB PAYMENT SERVICE
+===================================================== */
+
+.rmb-section {
+    padding: 110px 0;
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(
+            circle at 90% 20%,
+            rgba(255, 193, 7, 0.10),
+            transparent 35%
+        ),
+        #f8fafc;
+}
+
+
+.rmb-wrapper {
+    display: grid;
+    grid-template-columns: 1.15fr .85fr;
+    gap: 70px;
+    align-items: center;
+}
+
+
+.rmb-content {
+    max-width: 700px;
+}
+
+
+.rmb-content h2 {
+    font-size: clamp(2.3rem, 5vw, 4rem);
+    line-height: 1.05;
+    margin: 15px 0 25px;
+    font-weight: 800;
+    letter-spacing: -2px;
+}
+
+
+.rmb-content h2 span {
+    display: block;
+}
+
+
+.rmb-intro {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: #64748b;
+    max-width: 650px;
+}
+
+
+/* =====================================================
+   RMB FEATURES
+===================================================== */
+
+.rmb-features {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-top: 40px;
+}
+
+
+.rmb-feature {
+    display: flex;
+    gap: 16px;
+    padding: 22px;
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, .08);
+    border-radius: 18px;
+    transition: all .3s ease;
+}
+
+
+.rmb-feature:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 45px rgba(15, 23, 42, .10);
+}
+
+
+.rmb-feature-icon {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: #facc15;
+    color: #111827;
+    font-size: 19px;
+}
+
+
+.rmb-feature h4 {
+    margin: 0 0 6px;
+    font-size: 1rem;
+}
+
+
+.rmb-feature p {
+    margin: 0;
+    color: #64748b;
+    font-size: .9rem;
+    line-height: 1.6;
+}
+
+
+/* =====================================================
+   RMB BUTTONS
+===================================================== */
+
+.rmb-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 40px;
+    flex-wrap: wrap;
+}
+
+
+.rmb-actions a {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+/* =====================================================
+   RMB VISUAL CARD
+===================================================== */
+
+.rmb-visual {
+    display: flex;
+    justify-content: center;
+}
+
+
+.rmb-card {
+    width: min(100%, 430px);
+    min-height: 500px;
+    padding: 32px;
+    border-radius: 30px;
+    position: relative;
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            145deg,
+            #111827,
+            #1e293b
+        );
+
+    color: #fff;
+
+    box-shadow:
+        0 35px 80px rgba(15, 23, 42, .25);
+
+    transform: rotate(1deg);
+    transition: transform .4s ease;
+}
+
+
+.rmb-card:hover {
+    transform: rotate(0deg) translateY(-8px);
+}
+
+
+.rmb-card::before {
+    content: "";
+    position: absolute;
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    background: rgba(250, 204, 21, .12);
+    top: -100px;
+    right: -100px;
+}
+
+
+.rmb-card::after {
+    content: "";
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.08);
+    bottom: -100px;
+    left: -80px;
+}
+
+
+.rmb-card-top {
+    position: relative;
+    z-index: 2;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+}
+
+
+.rmb-card-top i {
+    color: #facc15;
+    font-size: 20px;
+}
+
+
+.rmb-symbol {
+    position: relative;
+    z-index: 2;
+
+    width: 100px;
+    height: 100px;
+
+    margin: 70px auto 25px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #facc15;
+    color: #111827;
+
+    font-size: 3.5rem;
+    font-weight: 800;
+
+    box-shadow:
+        0 20px 50px rgba(250, 204, 21, .25);
+}
+
+
+.rmb-card h3 {
+    position: relative;
+    z-index: 2;
+
+    text-align: center;
+
+    font-size: 2rem;
+    margin: 0;
+}
+
+
+.rmb-card > p {
+    position: relative;
+    z-index: 2;
+
+    text-align: center;
+
+    color: #94a3b8;
+}
+
+
+/* =====================================================
+   PAYMENT FLOW
+===================================================== */
+
+.rmb-payment-flow {
+    position: relative;
+    z-index: 2;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-top: 45px;
+    padding: 20px;
+
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 18px;
+
+    background: rgba(255,255,255,.04);
+}
+
+
+.rmb-payment-flow div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+
+.rmb-payment-flow span {
+    font-size: .75rem;
+    color: #94a3b8;
+}
+
+
+.rmb-payment-flow strong {
+    font-size: 1.3rem;
+}
+
+
+.rmb-payment-flow > i {
+    color: #facc15;
+}
+
+
+/* =====================================================
+   RMB STATUS
+===================================================== */
+
+.rmb-status {
+    position: relative;
+    z-index: 2;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    margin-top: 25px;
+
+    color: #cbd5e1;
+    font-size: .85rem;
+}
+
+
+.rmb-status i {
+    color: #facc15;
+}
+
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 900px) {
+
+    .rmb-wrapper {
+        grid-template-columns: 1fr;
+        gap: 50px;
+    }
+
+    .rmb-content {
+        max-width: none;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .rmb-section {
+        padding: 80px 0;
+    }
+
+    .rmb-features {
+        grid-template-columns: 1fr;
+    }
+
+    .rmb-card {
+        min-height: 450px;
+        padding: 25px;
+    }
+
+    .rmb-symbol {
+        margin-top: 50px;
+    }
+
+}
