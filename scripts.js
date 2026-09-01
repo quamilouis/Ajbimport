@@ -3,6 +3,45 @@
 ========================================= */
 
 
+function setMobileMenuState(menuButton, mobileNavigation, isOpen) {
+    if (!menuButton || !mobileNavigation) return;
+
+    menuButton.classList.toggle("active", isOpen);
+    mobileNavigation.classList.toggle("active", isOpen);
+    mobileNavigation.style.opacity = isOpen ? "1" : "0";
+    mobileNavigation.style.visibility = isOpen ? "visible" : "hidden";
+    mobileNavigation.style.transform = isOpen ? "translateY(0)" : "translateY(-10px)";
+    menuButton.setAttribute("aria-expanded", String(isOpen));
+    menuButton.setAttribute("aria-label", isOpen ? "Close navigation" : "Open navigation");
+}
+
+function initMobileMenu() {
+    if (window.__AJB_MOBILE_MENU_INIT__) return;
+    window.__AJB_MOBILE_MENU_INIT__ = true;
+
+    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+    const mobileNavigation = document.getElementById("mobileNavigation");
+
+    if (!mobileMenuBtn || !mobileNavigation || mobileMenuBtn.dataset.mobileMenuBound === "true") {
+        return;
+    }
+
+    mobileMenuBtn.dataset.mobileMenuBound = "true";
+
+    mobileMenuBtn.addEventListener("click", () => {
+        const isOpen = !mobileMenuBtn.classList.contains("active");
+        setMobileMenuState(mobileMenuBtn, mobileNavigation, isOpen);
+    });
+
+    mobileNavigation.querySelectorAll("a").forEach(link => {
+        link.addEventListener("click", () => {
+            setMobileMenuState(mobileMenuBtn, mobileNavigation, false);
+        });
+    });
+
+    setMobileMenuState(mobileMenuBtn, mobileNavigation, false);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
 
 
@@ -61,22 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     handleHeaderScroll();
 
-
-
-    /* =====================================
-       MOBILE MENU
-    ===================================== */
-
-    const mobileMenuBtn =
-        document.getElementById(
-            "mobileMenuBtn"
-        );
-
-
-    const mobileNavigation =
-        document.getElementById(
-            "mobileNavigation"
-        );
+    initMobileMenu();
 
 
     /* =====================================
@@ -232,62 +256,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateHeader();
 
 
-    /* =====================================
-       MOBILE MENU
-    ===================================== */
-
-    const menuButton =
-        document.getElementById("mobileMenuBtn");
-
-    const mobileNavigation =
-        document.getElementById("mobileNavigation");
-
-
-    if (menuButton && mobileNavigation) {
-
-        menuButton.addEventListener(
-            "click",
-            () => {
-
-                const isOpen =
-                    mobileNavigation.classList.toggle("active");
-
-                menuButton.classList.toggle("active", isOpen);
-                menuButton.setAttribute(
-                    "aria-expanded",
-                    String(isOpen)
-                );
-                menuButton.setAttribute(
-                    "aria-label",
-                    isOpen ? "Close navigation" : "Open navigation"
-                );
-
-            }
-        );
-
-
-        mobileNavigation
-            .querySelectorAll("a")
-            .forEach(link => {
-
-                link.addEventListener(
-                    "click",
-                    () => {
-
-                        mobileNavigation.classList.remove(
-                            "active"
-                        );
-
-                        menuButton.classList.remove(
-                            "active"
-                        );
-
-                    }
-                );
-
-            });
-
-    }
+    initMobileMenu();
 
 
     /* =====================================
@@ -1755,37 +1724,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentCategory = "all";
 
 
-    /* =====================================
-       MOBILE MENU
-    ===================================== */
-
-    const mobileMenuBtn =
-        document.getElementById(
-            "mobileMenuBtn"
-        );
-
-    const mobileNavigation =
-        document.getElementById(
-            "mobileNavigation"
-        );
-
-    if (
-        mobileMenuBtn &&
-        mobileNavigation
-    ) {
-
-        mobileMenuBtn.addEventListener(
-            "click",
-            () => {
-
-                mobileNavigation
-                    .classList
-                    .toggle("active");
-
-            }
-        );
-
-    }
+    initMobileMenu();
 
 
     /* =====================================
