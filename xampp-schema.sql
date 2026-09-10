@@ -67,6 +67,27 @@ CREATE TABLE IF NOT EXISTS `quote_submissions` (
 
 
 -- =========================================================
+-- Newsletter Subscriptions Table
+-- =========================================================
+-- Stores newsletter subscribers submitted through the public
+-- subscription form on the website.
+
+CREATE TABLE IF NOT EXISTS `newsletter_subscriptions` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(255) NOT NULL,
+  `email` VARCHAR(255) NOT NULL,
+  `status` VARCHAR(50) DEFAULT 'active',
+  `subscribedAt` DATETIME NOT NULL,
+  `updatedAt` DATETIME NOT NULL,
+  `unsubscribedAt` DATETIME NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_newsletter_email` (`email`),
+  KEY `idx_newsletter_status` (`status`),
+  KEY `idx_newsletter_subscribed` (`subscribedAt`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- =========================================================
 -- Blog Posts Table
 -- =========================================================
 -- Stores blog articles authored by administrators

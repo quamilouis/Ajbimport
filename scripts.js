@@ -44,7 +44,6 @@ function initMobileMenu() {
 
 document.addEventListener("DOMContentLoaded", () => {
 
-
     /* =====================================
        PRELOADER
     ===================================== */
@@ -1889,12 +1888,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     <a
                         class="read-more"
-                        href="
-                            article.html?slug=
-                            ${encodeURIComponent(
-                                featured.slug
-                            )}
-                        "
+                        href="article.html?slug=${encodeURIComponent(featured.slug)}"
                     >
                         Read Full Article
                         <i class="fa-solid fa-arrow-right"></i>
@@ -1986,12 +1980,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         </div>
 
                         <a
-                            href="
-                                article.html?slug=
-                                ${encodeURIComponent(
-                                    article.slug
-                                )}
-                            "
+                            href="article.html?slug=${encodeURIComponent(article.slug)}"
                             class="read-more"
                         >
                             Read More
@@ -2201,17 +2190,44 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    loadArticles();
-
     const articleDetail = document.getElementById("articleDetail");
 
     if (articleDetail) {
         loadArticleDetail();
     }
 
+    if (!blogGrid || !featuredArticle || !noArticles) {
+        return;
+    }
+
+    loadArticles();
+
 });
 
 async function loadArticleDetail() {
+    function formatDate(date) {
+        return new Date(date)
+            .toLocaleDateString(
+                "en-GH",
+                {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric"
+                }
+            );
+    }
+
+    function escapeHTML(value) {
+        if (!value) return "";
+
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
     const articleDetail = document.getElementById("articleDetail");
     const articleBreadcrumb = document.getElementById("articleBreadcrumb");
 

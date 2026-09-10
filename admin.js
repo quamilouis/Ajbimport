@@ -227,17 +227,15 @@ document.addEventListener(
                                 ? "Quote Requests"
                                 : section === "blog"
                                 ? "Blog Posts"
-                                : section === "sheets"
-                                ? "Google Sheets"
+                                : section === "subscribers"
+                                ? "Newsletter Subscribers"
                                 : "Services";
 
                     }
 
-                    if (section === "sheets") {
+                    if (section === "subscribers") {
 
-                        loadSheetsStatus();
-
-                        loadSheetsSubmissions();
+                        loadSubscribers();
 
                     }
 
@@ -542,6 +540,14 @@ document.addEventListener(
                         </td>
 
                         <td>
+                            <div class="quote-message-preview">
+                                ${escapeHTML(
+                                    (quote.message || "No message provided.").slice(0, 90)
+                                )}${(quote.message || "").length > 90 ? "..." : ""}
+                            </div>
+                        </td>
+
+                        <td>
                             ${escapeHTML(
                                 quote.service
                             )}
@@ -711,6 +717,22 @@ document.addEventListener(
                                 quote.phone
                             )}
 
+                        </td>
+
+                        <td>
+                            <div class="quote-message-preview">
+                                ${escapeHTML(
+                                    (quote.message || "No message provided.").slice(0, 120)
+                                )}${(quote.message || "").length > 120 ? "..." : ""}
+                            </div>
+                            <a
+                                href="mailto:${escapeHTML(
+                                    quote.email
+                                )}?subject=${encodeURIComponent(`Re: Quote Request #${quote.id}`)}"
+                                class="quote-reply-link"
+                            >
+                                Reply
+                            </a>
                         </td>
 
                         <td>
@@ -2086,7 +2108,7 @@ document.addEventListener(
                 "click",
                 () => {
 
-                    loadQuotes();
+                    window.location.reload();
 
                 }
             );
@@ -2112,7 +2134,7 @@ document.addEventListener(
 
                         initBlogAdmin();
 
-                        initSheetsAdmin();
+                        initSubscribersAdmin();
 
                     }
 
@@ -2165,6 +2187,197 @@ document.addEventListener(
             document.getElementById(
                 "sidebarBlogCount"
             );
+
+        const blogImageUpload =
+            document.getElementById(
+                "blogImageUpload"
+            );
+
+        const blogImageField =
+            document.getElementById(
+                "blogImage"
+            );
+
+        const blogMediaUpload =
+            document.getElementById(
+                "blogMediaUpload"
+            );
+
+
+        function setBlogEditorMessage(message, type = "") {
+
+            if (!blogEditorMessage) {
+                return;
+            }
+
+            blogEditorMessage.textContent = message;
+            blogEditorMessage.className =
+                type
+                    ? `login-message show ${type}`
+                    : "login-message";
+
+        }
+
+
+        function readFileAsDataUrl(file) {
+
+            return new Promise(
+                (resolve, reject) => {
+
+                    const reader = new FileReader();
+
+                    reader.onload = () => {
+                        resolve(reader.result);
+                    };
+
+                    reader.onerror = () => {
+                        reject(
+                            new Error(
+                                "Unable to read the selected file."
+                            )
+                        );
+                    };
+
+                    reader.readAsDataURL(file);
+
+                }
+            );
+
+        }
+
+
+        function insertMediaIntoContent(dataUrl, fileType) {
+
+            const contentField =
+                document.getElementById(
+                    "blogContent"
+                );
+
+            if (!contentField) {
+                return;
+            }
+
+            const mediaTag =
+                fileType.startsWith("video/")
+                    ? `<video controls src="${dataUrl}"></video>\n`
+                    : `<img src="${dataUrl}" alt="Uploaded media" />\n`;
+
+            const start =
+                contentField.selectionStart;
+
+            const end =
+                contentField.selectionEnd;
+
+            contentField.setRangeText(
+                mediaTag,
+                start,
+                end,
+                "end"
+            );
+
+            contentField.focus();
+
+        }
+
+
+        async function handleBlogImageUpload(event) {
+
+            const file = event.target.files && event.target.files[0];
+
+            if (!file) {
+                return;
+            }
+
+            if (!file.type.startsWith("image/")) {
+                setBlogEditorMessage(
+                    "Please choose an image file for the cover image.",
+                    "error"
+                );
+                event.target.value = "";
+                return;
+            }
+
+            try {
+
+                const dataUrl = await readFileAsDataUrl(file);
+
+                document.getElementById(
+                    "blogImage"
+                ).value = dataUrl;
+
+                setBlogEditorMessage(
+                    "Cover image uploaded successfully.",
+                    "success"
+                );
+
+            } catch (error) {
+
+                setBlogEditorMessage(
+                    error.message ||
+                    "Unable to upload the image.",
+                    "error"
+                );
+
+            } finally {
+
+                event.target.value = "";
+
+            }
+
+        }
+
+
+        async function handleBlogMediaUpload(event) {
+
+            const file = event.target.files && event.target.files[0];
+
+            if (!file) {
+                return;
+            }
+
+            if (
+                !file.type.startsWith("image/") &&
+                !file.type.startsWith("video/")
+            ) {
+                setBlogEditorMessage(
+                    "Please choose an image or video file.",
+                    "error"
+                );
+                event.target.value = "";
+                return;
+            }
+
+            try {
+
+                const dataUrl = await readFileAsDataUrl(file);
+
+                insertMediaIntoContent(
+                    dataUrl,
+                    file.type
+                );
+
+                setBlogEditorMessage(
+                    file.type.startsWith("video/")
+                        ? "Video uploaded and inserted into the post content."
+                        : "Image uploaded and inserted into the post content.",
+                    "success"
+                );
+
+            } catch (error) {
+
+                setBlogEditorMessage(
+                    error.message ||
+                    "Unable to upload the media.",
+                    "error"
+                );
+
+            } finally {
+
+                event.target.value = "";
+
+            }
+
+        }
 
 
         function initBlogAdmin() {
@@ -2243,6 +2456,53 @@ document.addEventListener(
                 blogPostForm.addEventListener(
                     "submit",
                     saveBlogPost
+                );
+
+            }
+
+
+            const previewButton =
+                document.getElementById(
+                    "previewBlogPost"
+                );
+
+            if (previewButton) {
+
+                previewButton.addEventListener(
+                    "click",
+                    previewBlogPost
+                );
+
+            }
+
+
+            if (blogImageUpload) {
+
+                blogImageUpload.addEventListener(
+                    "change",
+                    handleBlogImageUpload
+                );
+
+            }
+
+
+            if (blogImageField && blogImageUpload) {
+
+                blogImageField.addEventListener(
+                    "click",
+                    () => {
+                        blogImageUpload.click();
+                    }
+                );
+
+            }
+
+
+            if (blogMediaUpload) {
+
+                blogMediaUpload.addEventListener(
+                    "change",
+                    handleBlogMediaUpload
                 );
 
             }
@@ -2658,6 +2918,318 @@ document.addEventListener(
         }
 
 
+        function escapeBlogPreviewHTML(value) {
+
+            if (!value) return "";
+
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/\"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+
+        }
+
+
+        function formatBlogPreviewContent(content) {
+
+            if (!content) {
+                return "<p>Read the latest update from AJB Imports.</p>";
+            }
+
+            return content
+                .replace(/\n{3,}/g, "</p><p>")
+                .replace(/\n/g, "<br>")
+                .trim();
+
+        }
+
+
+        function previewBlogPost() {
+
+            const payload = {
+
+                title:
+                    document.getElementById(
+                        "blogTitle"
+                    ).value.trim(),
+
+                slug:
+                    document.getElementById(
+                        "blogSlug"
+                    ).value.trim(),
+
+                category:
+                    document.getElementById(
+                        "blogCategory"
+                    ).value,
+
+                author:
+                    document.getElementById(
+                        "blogAuthor"
+                    ).value.trim(),
+
+                image:
+                    document.getElementById(
+                        "blogImage"
+                    ).value.trim(),
+
+                excerpt:
+                    document.getElementById(
+                        "blogExcerpt"
+                    ).value.trim(),
+
+                content:
+                    document.getElementById(
+                        "blogContent"
+                    ).value,
+
+                published:
+                    document.getElementById(
+                        "blogPublished"
+                    ).checked,
+
+                featured:
+                    document.getElementById(
+                        "blogFeatured"
+                    ).checked
+
+            };
+
+            const imageUrl =
+                payload.image &&
+                !payload.image.startsWith("file://")
+                    ? payload.image
+                    : "https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=1400&q=80";
+
+            const categoryLabel =
+                payload.category === "company"
+                    ? "Company News"
+                    : payload.category === "logistics"
+                        ? "Logistics"
+                        : payload.category === "import"
+                            ? "Import & Export"
+                            : "Shipping Tips";
+
+            const previewHtml = `
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8" />
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                    <title>${escapeBlogPreviewHTML(payload.title || "Preview Post")}</title>
+                    <style>
+                        body {
+                            margin: 0;
+                            font-family: Inter, Arial, sans-serif;
+                            background: #f8fafc;
+                            color: #0f172a;
+                        }
+                        .preview-shell {
+                            max-width: 1000px;
+                            margin: 40px auto;
+                            background: #ffffff;
+                            border-radius: 18px;
+                            overflow: hidden;
+                            box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12);
+                        }
+                        .preview-hero {
+                            min-height: 260px;
+                            background-size: cover;
+                            background-position: center;
+                            background-repeat: no-repeat;
+                        }
+                        .preview-body {
+                            padding: 32px;
+                        }
+                        .badge {
+                            display: inline-block;
+                            font-size: 12px;
+                            letter-spacing: 0.08em;
+                            text-transform: uppercase;
+                            background: #dbeafe;
+                            color: #1d4ed8;
+                            padding: 8px 12px;
+                            border-radius: 999px;
+                            font-weight: 700;
+                        }
+                        h1 {
+                            margin: 20px 0 16px;
+                            font-size: clamp(2rem, 4vw, 3rem);
+                            line-height: 1.1;
+                        }
+                        .meta {
+                            display: flex;
+                            flex-wrap: wrap;
+                            gap: 18px;
+                            font-size: 14px;
+                            color: #475569;
+                            margin-bottom: 24px;
+                        }
+                        .summary {
+                            padding: 18px 20px;
+                            background: #f8fafc;
+                            border-left: 4px solid #2563eb;
+                            margin-bottom: 28px;
+                            font-size: 16px;
+                            color: #334155;
+                        }
+                        .content {
+                            font-size: 17px;
+                            line-height: 1.8;
+                            color: #1f2937;
+                        }
+                        .content p {
+                            margin: 0 0 16px;
+                        }
+                        .content img, .content video {
+                            display: block;
+                            max-width: 100%;
+                            border-radius: 14px;
+                            margin: 18px 0;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="preview-shell">
+                        <div class="preview-hero" style="background-image: url('${escapeBlogPreviewHTML(imageUrl)}');"></div>
+                        <div class="preview-body">
+                            <span class="badge">${escapeBlogPreviewHTML(categoryLabel)}</span>
+                            <h1>${escapeBlogPreviewHTML(payload.title || "Untitled Post")}</h1>
+                            <div class="meta">
+                                <span>${escapeBlogPreviewHTML(payload.author || "AJB Imports")}</span>
+                                <span>${escapeBlogPreviewHTML(payload.published ? "Published" : "Draft")}</span>
+                            </div>
+                            <div class="summary">
+                                ${escapeBlogPreviewHTML(payload.excerpt || "Preview excerpt will appear here.")}
+                            </div>
+                            <div class="content">
+                                ${formatBlogPreviewContent(payload.content)}
+                            </div>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            const previewWindow = window.open(
+                "",
+                "_blank",
+                "width=1200,height=900"
+            );
+
+            if (previewWindow) {
+                previewWindow.document.open();
+                previewWindow.document.write(previewHtml);
+                previewWindow.document.close();
+                previewWindow.focus();
+                return;
+            }
+
+            const existingPreviewModal =
+                document.getElementById("blogPreviewModal");
+
+            if (existingPreviewModal) {
+                existingPreviewModal.remove();
+            }
+
+            const previewModalBackdrop =
+                document.createElement("div");
+
+            previewModalBackdrop.id = "blogPreviewModal";
+            previewModalBackdrop.style.position = "fixed";
+            previewModalBackdrop.style.inset = "0";
+            previewModalBackdrop.style.background = "rgba(15, 23, 42, 0.6)";
+            previewModalBackdrop.style.display = "flex";
+            previewModalBackdrop.style.alignItems = "center";
+            previewModalBackdrop.style.justifyContent = "center";
+            previewModalBackdrop.style.zIndex = "9999";
+            previewModalBackdrop.style.padding = "20px";
+
+            const previewModalPanel =
+                document.createElement("div");
+
+            previewModalPanel.style.width = "min(1200px, 100%)";
+            previewModalPanel.style.maxHeight = "92vh";
+            previewModalPanel.style.background = "#ffffff";
+            previewModalPanel.style.borderRadius = "18px";
+            previewModalPanel.style.overflow = "hidden";
+            previewModalPanel.style.boxShadow = "0 30px 80px rgba(15, 23, 42, 0.25)";
+            previewModalPanel.style.display = "flex";
+            previewModalPanel.style.flexDirection = "column";
+
+            const previewModalHeader =
+                document.createElement("div");
+
+            previewModalHeader.style.display = "flex";
+            previewModalHeader.style.alignItems = "center";
+            previewModalHeader.style.justifyContent = "space-between";
+            previewModalHeader.style.padding = "18px 22px";
+            previewModalHeader.style.borderBottom = "1px solid #e5e7eb";
+            previewModalHeader.style.background = "#f8fafc";
+
+            const previewModalTitle =
+                document.createElement("h3");
+
+            previewModalTitle.textContent = "Preview Post";
+            previewModalTitle.style.margin = "0";
+            previewModalTitle.style.fontSize = "20px";
+            previewModalTitle.style.color = "#0f172a";
+
+            const previewCloseButton =
+                document.createElement("button");
+
+            previewCloseButton.type = "button";
+            previewCloseButton.textContent = "Close";
+            previewCloseButton.style.border = "1px solid #cbd5e1";
+            previewCloseButton.style.background = "#ffffff";
+            previewCloseButton.style.padding = "8px 14px";
+            previewCloseButton.style.borderRadius = "8px";
+            previewCloseButton.style.cursor = "pointer";
+            previewCloseButton.style.fontWeight = "700";
+            previewCloseButton.style.color = "#0f172a";
+
+            previewCloseButton.addEventListener(
+                "click",
+                () => {
+                    previewModalBackdrop.remove();
+                }
+            );
+
+            const previewFrame =
+                document.createElement("iframe");
+
+            previewFrame.title = "Blog post preview";
+            previewFrame.srcdoc = previewHtml;
+            previewFrame.style.width = "100%";
+            previewFrame.style.height = "80vh";
+            previewFrame.style.border = "0";
+            previewFrame.style.background = "#ffffff";
+
+            previewModalHeader.appendChild(
+                previewModalTitle
+            );
+            previewModalHeader.appendChild(
+                previewCloseButton
+            );
+            previewModalPanel.appendChild(
+                previewModalHeader
+            );
+            previewModalPanel.appendChild(
+                previewFrame
+            );
+            previewModalBackdrop.appendChild(
+                previewModalPanel
+            );
+
+            document.body.appendChild(
+                previewModalBackdrop
+            );
+
+        }
+
+
         async function saveBlogPost(
             event
         ) {
@@ -2966,146 +3538,77 @@ document.addEventListener(
 
 
         /* =================================================
-            SHEETS MANAGEMENT
+            SUBSCRIBER MANAGEMENT
         ================================================= */
 
-        let sheetsSubmissions = [];
+        let subscribers = [];
 
-        function initSheetsAdmin() {
+        function initSubscribersAdmin() {
 
-            const syncButton =
+            const searchInput =
                 document.getElementById(
-                    "syncFromSheets"
+                    "subscriberSearch"
                 );
 
-            if (syncButton) {
+            const statusFilter =
+                document.getElementById(
+                    "subscriberStatusFilter"
+                );
 
-                syncButton.addEventListener(
-                    "click",
-                    syncFromSheets
+            const refreshButton =
+                document.getElementById(
+                    "refreshSubscribers"
+                );
+
+            if (searchInput) {
+
+                searchInput.addEventListener(
+                    "input",
+                    renderSubscribersTable
                 );
 
             }
 
-            const refreshButton =
-                document.getElementById(
-                    "refreshSheets"
+            if (statusFilter) {
+
+                statusFilter.addEventListener(
+                    "change",
+                    renderSubscribersTable
                 );
+
+            }
 
             if (refreshButton) {
 
                 refreshButton.addEventListener(
                     "click",
-                    loadSheetsSubmissions
+                    loadSubscribers
                 );
 
             }
 
-        }
-
-        async function loadSheetsStatus() {
-
-            const statusValue =
-                document.getElementById(
-                    "sheetsConnectionStatus"
-                );
-
-            const idValue =
-                document.getElementById(
-                    "sheetsIdValue"
-                );
-
-            const tabValue =
-                document.getElementById(
-                    "sheetsTabValue"
-                );
-
-            if (!statusValue) return;
-
-            try {
-
-                const response =
-                    await fetch(
-                        "/api/admin/sheets/status"
-                    );
-
-                if (!response.ok) {
-
-                    statusValue.textContent =
-                        "Error";
-
-                    statusValue.className =
-                        "status-value status-not-configured";
-
-                    return;
-
-                }
-
-                const result =
-                    await response.json();
-
-                if (result.configured) {
-
-                    statusValue.textContent =
-                        "Connected";
-
-                    statusValue.className =
-                        "status-value status-connected";
-
-                } else {
-
-                    statusValue.textContent =
-                        "Not Configured";
-
-                    statusValue.className =
-                        "status-value status-not-configured";
-
-                }
-
-                if (idValue) {
-
-                    idValue.textContent =
-                        result.sheetId || "-";
-
-                }
-
-                if (tabValue) {
-
-                    tabValue.textContent =
-                        result.sheetTab || "-";
-
-                }
-
-            } catch (error) {
-
-                console.error(
-                    "Sheets status error:",
-                    error
-                );
-
-                statusValue.textContent =
-                    "Error";
-
-                statusValue.className =
-                    "status-value status-not-configured";
-
-            }
+            loadSubscribers();
 
         }
 
-        async function loadSheetsSubmissions() {
+        async function loadSubscribers() {
 
             const table =
                 document.getElementById(
-                    "sheetsSubmissionsTable"
+                    "subscribersTable"
                 );
-
-            if (!table) return;
 
             const message =
                 document.getElementById(
-                    "sheetsMessage"
+                    "subscribersMessage"
                 );
+
+            const refreshButton =
+                document.getElementById(
+                    "refreshSubscribers"
+                );
+
+            if (!table) return;
 
             if (message) {
 
@@ -3117,10 +3620,19 @@ document.addEventListener(
 
             }
 
+            if (refreshButton) {
+
+                refreshButton.disabled = true;
+
+                refreshButton.innerHTML =
+                    '<i class="fa-solid fa-spinner fa-spin"></i> Refreshing...';
+
+            }
+
             table.innerHTML = `
                 <tr>
-                    <td colspan="8">
-                        Loading submissions...
+                    <td colspan="6">
+                        Loading subscribers...
                     </td>
                 </tr>
             `;
@@ -3129,13 +3641,25 @@ document.addEventListener(
 
                 const response =
                     await fetch(
-                        "/api/admin/sheets/submissions"
+                        "/api/admin/subscribers?includeUnsubscribed=true"
                     );
+
+                if (
+                    response.status ===
+                    401
+                ) {
+
+                    window.location.href =
+                        "/admin/login";
+
+                    return;
+
+                }
 
                 if (!response.ok) {
 
                     let errorMsg =
-                        "Unable to load submissions.";
+                        "Unable to load subscribers.";
 
                     try {
 
@@ -3157,22 +3681,29 @@ document.addEventListener(
                 const result =
                     await response.json();
 
-                sheetsSubmissions =
-                    result.submissions || [];
+                subscribers =
+                    Array.isArray(result.subscribers)
+                        ? result.subscribers
+                        : [];
 
-                renderSheetsSubmissions();
+                renderSubscribersTable();
+
+                updateSubscriberSidebarCount();
 
             } catch (error) {
 
                 console.error(
-                    "Sheets submissions error:",
+                    "Subscriber load error:",
                     error
                 );
 
                 table.innerHTML = `
                     <tr>
-                        <td colspan="8">
-                            ${escapeHTML(error.message)}
+                        <td colspan="6">
+                            ${escapeHTML(
+                                error.message ||
+                                "Unable to load subscribers."
+                            )}
                         </td>
                     </tr>
                 `;
@@ -3183,7 +3714,19 @@ document.addEventListener(
                         "message show error";
 
                     message.textContent =
-                        error.message;
+                        error.message ||
+                        "Unable to load subscribers.";
+
+                }
+
+            } finally {
+
+                if (refreshButton) {
+
+                    refreshButton.disabled = false;
+
+                    refreshButton.innerHTML =
+                        '<i class="fa-solid fa-arrows-rotate"></i> Refresh';
 
                 }
 
@@ -3191,21 +3734,72 @@ document.addEventListener(
 
         }
 
-        function renderSheetsSubmissions() {
+        function renderSubscribersTable() {
 
             const table =
                 document.getElementById(
-                    "sheetsSubmissionsTable"
+                    "subscribersTable"
                 );
 
             if (!table) return;
 
-            if (!sheetsSubmissions.length) {
+            const searchInput =
+                document.getElementById(
+                    "subscriberSearch"
+                );
+
+            const statusFilter =
+                document.getElementById(
+                    "subscriberStatusFilter"
+                );
+
+            const search =
+                searchInput
+                    ? searchInput.value
+                        .toLowerCase()
+                    : "";
+
+            const filter =
+                statusFilter
+                    ? statusFilter.value
+                    : "all";
+
+            const filtered =
+                subscribers.filter(
+                    subscriber => {
+
+                        const matchesSearch =
+                            !search ||
+                            (
+                                subscriber.name +
+                                " " +
+                                subscriber.email
+                            )
+                                .toLowerCase()
+                                .includes(
+                                    search
+                                );
+
+                        const matchesStatus =
+                            filter ===
+                            "all" ||
+                            subscriber.status ===
+                            filter;
+
+                        return (
+                            matchesSearch &&
+                            matchesStatus
+                        );
+
+                    }
+                );
+
+            if (!filtered.length) {
 
                 table.innerHTML = `
                     <tr>
-                        <td colspan="8">
-                            No submissions found.
+                        <td colspan="6">
+                            No subscribers found.
                         </td>
                     </tr>
                 `;
@@ -3215,49 +3809,84 @@ document.addEventListener(
             }
 
             table.innerHTML =
-                sheetsSubmissions.map(
-                    sub => `
-                        <tr>
-                            <td>
-                                ${escapeHTML(sub._rowNumber)}
-                            </td>
-                            <td>
-                                <strong>
-                                    ${escapeHTML(sub["Customer Name"])}
-                                </strong>
-                            </td>
-                            <td>
-                                ${escapeHTML(sub["Email"])}
-                            </td>
-                            <td>
-                                ${escapeHTML(sub["Service Requested"])}
-                            </td>
-                            <td>
-                                ${escapeHTML(sub["Origin"])}
-                                →
-                                ${escapeHTML(sub["Destination"])}
-                            </td>
-                            <td>
-                                ${formatDate(sub["Submission Date"])}
-                            </td>
-                            <td>
-                                <select
-                                    class="status-select status-${escapeHTML(sub["Status"] || "New")}"
-                                    data-row="${escapeHTML(sub._rowNumber)}"
-                                >
-                                    ${statusOptions(sub["Status"] || "New")}
-                                </select>
-                            </td>
-                            <td>
-                                ${escapeHTML(sub["Admin Notes"] || "")}
-                            </td>
-                        </tr>
-                    `
-                ).join("");
+                filtered.map(
+                    subscriber => {
+
+                        const status =
+                            subscriber.status ||
+                            "active";
+
+                        return `
+                            <tr>
+
+                                <td>
+                                    <strong>
+                                        ${escapeHTML(
+                                            subscriber.name
+                                        )}
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    ${escapeHTML(
+                                        subscriber.email
+                                    )}
+                                </td>
+
+                                <td>
+                                    <select
+                                        class="status-select status-${escapeHTML(
+                                            status
+                                        )}"
+                                        data-id="${escapeHTML(
+                                            subscriber.id
+                                        )}"
+                                    >
+                                        ${subscriberStatusOptions(
+                                            status
+                                        )}
+                                    </select>
+                                </td>
+
+                                <td>
+                                    ${formatDate(
+                                        subscriber.subscribedAt
+                                    )}
+                                </td>
+
+                                <td>
+                                    ${formatDate(
+                                        subscriber.updatedAt
+                                    )}
+                                </td>
+
+                                <td>
+                                    <div class="subscriber-actions">
+                                        <button
+                                            type="button"
+                                            class="subscriber-action danger"
+                                            data-action="delete"
+                                            data-id="${escapeHTML(
+                                                subscriber.id
+                                            )}"
+                                            title="Delete subscriber"
+                                            aria-label="Delete subscriber"
+                                        >
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+
+                            </tr>
+                        `;
+
+                    }
+                )
+                .join("");
 
             table
                 .querySelectorAll(
-                    ".status-select[data-row]"
+                    ".status-select"
                 )
                 .forEach(select => {
 
@@ -3265,9 +3894,28 @@ document.addEventListener(
                         "change",
                         () => {
 
-                            updateSheetsStatus(
-                                select.dataset.row,
+                            updateSubscriberStatus(
+                                select.dataset.id,
                                 select.value
+                            );
+
+                        }
+                    );
+
+                });
+
+            table
+                .querySelectorAll(
+                    "button[data-action]"
+                )
+                .forEach(button => {
+
+                    button.addEventListener(
+                        "click",
+                        () => {
+
+                            deleteSubscriber(
+                                button.dataset.id
                             );
 
                         }
@@ -3277,95 +3925,72 @@ document.addEventListener(
 
         }
 
-        async function syncFromSheets() {
+        function subscriberStatusOptions(
+            current
+        ) {
 
-            const syncButton =
-                document.getElementById(
-                    "syncFromSheets"
-                );
+            const statuses = [
+                "active",
+                "unsubscribed"
+            ];
 
-            const message =
-                document.getElementById(
-                    "sheetsMessage"
-                );
-
-            if (syncButton) {
-
-                syncButton.disabled = true;
-
-                syncButton.innerHTML =
-                    '<i class="fa-solid fa-spinner fa-spin"></i> Syncing...';
-
-            }
-
-            try {
-
-                const response =
-                    await fetch(
-                        "/api/admin/sheets/sync",
-                        {
-                            method: "POST"
-                        }
-                    );
-
-                const result =
-                    await response.json();
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        result.message ||
-                        "Unable to sync."
-                    );
-
-                }
-
-                if (message) {
-
-                    message.className =
-                        "message show success";
-
-                    message.textContent =
-                        `Synced ${result.synced} new, ${result.updated} updated submissions.`;
-
-                }
-
-                loadSheetsSubmissions();
-
-            } catch (error) {
-
-                console.error(
-                    "Sheets sync error:",
-                    error
-                );
-
-                if (message) {
-
-                    message.className =
-                        "message show error";
-
-                    message.textContent =
-                        error.message;
-
-                }
-
-            } finally {
-
-                if (syncButton) {
-
-                    syncButton.disabled = false;
-
-                    syncButton.innerHTML =
-                        '<i class="fa-solid fa-sync"></i> Sync from Sheet';
-
-                }
-
-            }
+            return statuses.map(
+                status => `
+                    <option
+                        value="${status}"
+                        ${status === current
+                            ? "selected"
+                            : ""}
+                    >
+                        ${status === "active"
+                            ? "Active"
+                            : "Unsubscribed"}
+                    </option>
+                `
+            ).join("");
 
         }
 
-        async function updateSheetsStatus(
-            rowNumber,
+        function updateSubscriberSidebarCount() {
+
+            const count =
+                document.getElementById(
+                    "sidebarSubscriberCount"
+                );
+
+            if (!count) return;
+
+            count.textContent =
+                subscribers.filter(
+                    subscriber =>
+                        subscriber.status ===
+                        "active"
+                ).length;
+
+        }
+
+        function showSubscriberMessage(
+            text,
+            type
+        ) {
+
+            const message =
+                document.getElementById(
+                    "subscribersMessage"
+                );
+
+            if (!message) return;
+
+            message.className =
+                `message show ${type}`;
+
+            message.textContent =
+                text;
+
+        }
+
+        async function updateSubscriberStatus(
+            id,
             status
         ) {
 
@@ -3373,9 +3998,10 @@ document.addEventListener(
 
                 const response =
                     await fetch(
-                        `/api/admin/sheets/submissions/${encodeURIComponent(rowNumber)}`,
+                        `/api/admin/subscribers/${encodeURIComponent(id)}`,
                         {
-                            method: "PATCH",
+                            method:
+                                "PATCH",
 
                             headers: {
                                 "Content-Type":
@@ -3392,7 +4018,7 @@ document.addEventListener(
                 if (!response.ok) {
 
                     let errorMsg =
-                        "Unable to update submission.";
+                        "Unable to update subscriber.";
 
                     try {
 
@@ -3414,26 +4040,37 @@ document.addEventListener(
                 const result =
                     await response.json();
 
-                const submission =
-                    sheetsSubmissions.find(
+                const subscriber =
+                    subscribers.find(
                         item =>
-                            String(item._rowNumber) ===
-                            String(rowNumber)
+                            String(item.id) ===
+                            String(id)
                     );
 
-                if (submission) {
+                if (subscriber) {
 
-                    submission["Status"] =
-                        status;
+                    Object.assign(
+                        subscriber,
+                        result.subscriber || {
+                            status
+                        }
+                    );
 
                 }
 
-                renderSheetsSubmissions();
+                renderSubscribersTable();
+
+                updateSubscriberSidebarCount();
+
+                showSubscriberMessage(
+                    "Subscription updated.",
+                    "success"
+                );
 
             } catch (error) {
 
                 console.error(
-                    "Sheets update error:",
+                    "Subscriber update error:",
                     error
                 );
 
@@ -3441,7 +4078,94 @@ document.addEventListener(
                     error.message
                 );
 
-                loadSheetsSubmissions();
+                await loadSubscribers();
+
+            }
+
+        }
+
+        async function deleteSubscriber(
+            id
+        ) {
+
+            const subscriber =
+                subscribers.find(
+                    item =>
+                        String(item.id) ===
+                        String(id)
+                );
+
+            if (
+                !confirm(
+                    `Delete ${subscriber?.name || "this subscriber"}? This cannot be undone.`
+                )
+            ) {
+
+                return;
+
+            }
+
+            try {
+
+                const response =
+                    await fetch(
+                        `/api/admin/subscribers/${encodeURIComponent(id)}`,
+                        {
+                            method:
+                                "DELETE"
+                        }
+                    );
+
+                if (!response.ok) {
+
+                    let errorMsg =
+                        "Unable to delete subscriber.";
+
+                    try {
+
+                        const errorResult =
+                            await response.json();
+
+                        errorMsg =
+                            errorResult.message ||
+                            errorMsg;
+
+                    } catch (parseError) {
+
+                    }
+
+                    throw new Error(errorMsg);
+
+                }
+
+                subscribers =
+                    subscribers.filter(
+                        item =>
+                            String(item.id) !==
+                            String(id)
+                    );
+
+                renderSubscribersTable();
+
+                updateSubscriberSidebarCount();
+
+                showSubscriberMessage(
+                    "Subscriber deleted.",
+                    "success"
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Subscriber delete error:",
+                    error
+                );
+
+                alert(
+                    error.message
+                );
+
+                await loadSubscribers();
 
             }
 

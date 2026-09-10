@@ -12,7 +12,6 @@ const path = require("path");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const db = require("./database");
-const sheets = require("./google-sheets");
 
 const app = express();
 
@@ -461,59 +460,6 @@ app.post(
             );
 
 
-            try {
-
-                await sheets.appendQuoteSubmission({
-
-                    createdAt:
-                        new Date().toISOString(),
-
-                    fullName,
-
-                    company,
-
-                    phone,
-
-                    email,
-
-                    service,
-
-                    origin,
-
-                    destination,
-
-                    cargoType:
-
-                        cargoType ||
-                        "",
-
-                    cargoWeight,
-
-                    cargoVolume,
-
-                    shippingDate,
-
-                    preferredContact:
-                        "Email / Phone",
-
-                    message,
-
-                    status: "New",
-
-                    adminNotes: ""
-
-                });
-
-            } catch (sheetError) {
-
-                console.error(
-                    "Google Sheets sync error:",
-                    sheetError.message
-                );
-
-            }
-
-
             res.status(201).json({
 
                 success: true,
@@ -521,10 +467,7 @@ app.post(
                 message:
                     "Quote request received.",
 
-                enquiry: {
-                    id:
-                        enquiry.lastID
-                }
+                enquiry
 
             });
 
@@ -539,6 +482,81 @@ app.post(
                 success: false,
                 message:
                     "Unable to submit quote."
+            });
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   NEWSLETTER SUBSCRIPTION
+========================================================= */
+
+app.post(
+    "/api/subscribe",
+    async (req, res) => {
+
+        try {
+
+            await ensureDatabase();
+
+            const name =
+                String(req.body.name || "")
+                    .trim();
+
+            const email =
+                String(req.body.email || "")
+                    .trim()
+                    .toLowerCase();
+
+            if (!name || !email) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Name and email are required."
+                });
+
+            }
+
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Please enter a valid email address."
+                });
+
+            }
+
+            const result =
+                await db.createNewsletterSubscription({
+                    name,
+                    email
+                });
+
+            res.status(result.created ? 201 : 200).json({
+                success: true,
+                message: result.created
+                    ? "You have successfully subscribed."
+                    : "Your subscription is already active.",
+                created: result.created,
+                subscription: result.subscription
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Subscription error:",
+                error
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Unable to subscribe."
             });
 
         }
@@ -654,7 +672,7 @@ app.patch(
             }
 
 
-            await db.run(
+            await run(
                 `UPDATE quote_submissions SET status = ? WHERE id = ?`,
                 [status, req.params.id]
             );
@@ -1062,7 +1080,7 @@ function shapeBlogPost(post) {
     title: post.title,
     excerpt: post.excerpt || "",
     content: post.content || "",
-    image: post.image || "",
+    image: normalizeBlogImage(post.image) || DEFAULT_BLOG_IMAGE,
     category: post.category || "company",
     categoryLabel: blogCategoryLabel(post.category),
     author: post.author || "AJB Imports",
@@ -1086,6 +1104,30 @@ function slugifyBlogTitle(value) {
 }
 
 
+function normalizeBlogImage(image) {
+  if (!image) {
+    return "";
+  }
+
+  const trimmed = String(image).trim();
+
+  if (
+    !trimmed ||
+    trimmed.startsWith("file://") ||
+    trimmed.startsWith("/") ||
+    /^[a-zA-Z]:\\/.test(trimmed)
+  ) {
+    return "";
+  }
+
+  return trimmed;
+}
+
+
+const DEFAULT_BLOG_IMAGE =
+  "https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=1400&q=80";
+
+
 app.get(
     "/api/blog",
     async (req, res) => {
@@ -1094,7 +1136,9 @@ app.get(
 
             await ensureDatabase();
 
-            const posts = await db.listBlogPosts();
+            const posts = await db.listBlogPosts({
+                includeUnpublished: true
+            });
 
             res.json(
                 posts.map(shapeBlogPost)
@@ -1151,7 +1195,8 @@ app.get(
 
             const post =
                 await db.findBlogPostBySlug(
-                    req.params.slug
+                    req.params.slug,
+                    true
                 );
 
 
@@ -1632,11 +1677,11 @@ app.delete(
 
 
 /* =========================================================
-    ADMIN - GOOGLE SHEETS MANAGEMENT
-    ========================================================= */
+   ADMIN - NEWSLETTER SUBSCRIBERS
+========================================================= */
 
 app.get(
-    "/api/admin/sheets/status",
+    "/api/admin/subscribers",
     requireAdmin,
     async (req, res) => {
 
@@ -1644,173 +1689,30 @@ app.get(
 
             await ensureDatabase();
 
+            const includeUnsubscribed =
+                req.query.includeUnsubscribed === "true";
+
+            const subscribers =
+                await db.listNewsletterSubscriptions({
+                    includeUnsubscribed
+                });
+
             res.json({
                 success: true,
-                configured: sheets.isConfigured(),
-                sheetId: sheets.extractSheetId(
-                    process.env.GOOGLE_SHEET_ID || ""
-                ),
-                sheetTab:
-                    process.env.GOOGLE_SHEET_TAB ||
-                    "Quote Submissions"
+                subscribers
             });
 
         } catch (error) {
 
             console.error(
-                "Sheets status error:",
+                "Subscriber list error:",
                 error
             );
 
             res.status(500).json({
                 success: false,
                 message:
-                    "Unable to load sheets status."
-            });
-
-        }
-
-    }
-);
-
-
-app.get(
-    "/api/admin/sheets/submissions",
-    requireAdmin,
-    async (req, res) => {
-
-        await ensureDatabase();
-
-        try {
-
-            const submissions =
-                await sheets.getSubmissions();
-
-            res.json({
-                success: true,
-                submissions
-            });
-
-        } catch (error) {
-
-            console.error(
-                "Sheets submissions error:",
-                error
-            );
-
-            res.status(502).json({
-                success: false,
-                message: error.message ||
-                    "Unable to load submissions from Google Sheets."
-            });
-
-        }
-
-    }
-);
-
-
-app.post(
-    "/api/admin/sheets/sync",
-    requireAdmin,
-    async (req, res) => {
-
-        await ensureDatabase();
-
-        try {
-
-            const submissions =
-                await sheets.getSubmissions();
-
-            let synced = 0;
-            let updated = 0;
-
-            for (const sub of submissions) {
-
-                const createdAt =
-                    sub["Submission Date"] || "";
-
-                const email =
-                    sub["Email"] || "";
-
-                const existing = await db.get(
-                    `SELECT id FROM quote_submissions
-                     WHERE email = ? AND createdAt = ?`,
-                    [email, createdAt]
-                );
-
-                if (existing) {
-
-                    await db.run(
-                        `UPDATE quote_submissions
-                         SET status = ?,
-                             adminNotes = ?
-                         WHERE id = ?`,
-                        [
-                            sub["Status"] || "New",
-                            sub["Admin Notes"] || "",
-                            existing.id
-                        ]
-                    );
-
-                    updated++;
-
-                } else {
-
-                    await db.run(
-                        `INSERT INTO quote_submissions
-                         (createdAt, fullName, company, phone,
-                          email, service, origin, destination,
-                          cargoType, cargoWeight, cargoVolume,
-                          shippingDate, preferredContact,
-                          message, status, adminNotes)
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                        [
-                            createdAt ||
-                                new Date().toISOString(),
-                            sub["Customer Name"] || "",
-                            sub["Company"] || "",
-                            sub["Phone"] || "",
-                            email || "",
-                            sub["Service Requested"] || "",
-                            sub["Origin"] || "",
-                            sub["Destination"] || "",
-                            sub["Cargo / Package Details"] || "",
-                            sub["Cargo Weight"] || "",
-                            sub["Cargo Volume"] || "",
-                            sub["Shipping Date"] || "",
-                            sub["Preferred Contact"] ||
-                                "Email / Phone",
-                            sub["Message"] || "",
-                            sub["Status"] || "New",
-                            sub["Admin Notes"] || ""
-                        ]
-                    );
-
-                    synced++;
-
-                }
-
-            }
-
-            res.json({
-                success: true,
-                synced,
-                updated,
-                total: submissions.length
-            });
-
-        } catch (error) {
-
-            console.error(
-                "Sheets sync error:",
-                error
-            );
-
-            res.status(502).json({
-                success: false,
-                message: error.message ||
-                    "Unable to sync from Google Sheets."
+                    "Unable to load subscribers."
             });
 
         }
@@ -1820,41 +1722,124 @@ app.post(
 
 
 app.patch(
-    "/api/admin/sheets/submissions/:rowNumber",
+    "/api/admin/subscribers/:id",
     requireAdmin,
     async (req, res) => {
 
-        await ensureDatabase();
-
         try {
 
-            const rowNumber =
-                parseInt(req.params.rowNumber, 10);
+            await ensureDatabase();
 
-            const { status, adminNotes } = req.body;
+            const id =
+                parseInt(req.params.id, 10);
 
-            await sheets.updateSubmission(
-                rowNumber,
-                { status, adminNotes }
-            );
+            const { status } =
+                req.body;
+
+            if (!Number.isInteger(id) || id <= 0) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Invalid subscriber."
+                });
+
+            }
+
+            const subscriber =
+                await db.updateNewsletterSubscriptionStatus(
+                    id,
+                    status
+                );
+
+            if (!subscriber) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Subscriber not found."
+                });
+
+            }
 
             res.json({
                 success: true,
                 message:
-                    "Submission updated in Google Sheets."
+                    "Subscription updated.",
+                subscriber
             });
 
         } catch (error) {
 
             console.error(
-                "Sheets update error:",
+                "Subscriber update error:",
                 error
             );
 
-            res.status(502).json({
+            res.status(500).json({
                 success: false,
-                message: error.message ||
-                    "Unable to update submission in Google Sheets."
+                message:
+                    "Unable to update subscriber."
+            });
+
+        }
+
+    }
+);
+
+
+app.delete(
+    "/api/admin/subscribers/:id",
+    requireAdmin,
+    async (req, res) => {
+
+        try {
+
+            await ensureDatabase();
+
+            const id =
+                parseInt(req.params.id, 10);
+
+            if (!Number.isInteger(id) || id <= 0) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Invalid subscriber."
+                });
+
+            }
+
+            const result =
+                await db.deleteNewsletterSubscription(id);
+
+            if (result.changes === 0) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Subscriber not found."
+                });
+
+            }
+
+            res.json({
+                success: true,
+                message:
+                    "Subscriber deleted."
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Subscriber delete error:",
+                error
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Unable to delete subscriber."
             });
 
         }
@@ -1863,8 +1848,8 @@ app.patch(
 );
 
 /* =========================================================
-    HEALTH CHECK
-    ======================================================== */
+   HEALTH CHECK
+========================================================= */
 
 app.get(
     "/api/status",
@@ -2028,37 +2013,6 @@ app.listen(
 `
         );
 
-
-        if (sheets.isConfigured()) {
-
-            console.log(
-                "Google Sheets sync: enabled"
-            );
-
-            try {
-
-                await sheets.testConnection();
-
-                console.log(
-                    "Google Sheets connection: OK"
-                );
-
-            } catch (error) {
-
-                console.error(
-                    "Google Sheets connection failed:",
-                    error.message
-                );
-
-            }
-
-        } else {
-
-            console.log(
-                "Google Sheets sync: disabled (set a valid GOOGLE_SHEET_ID and GOOGLE_SERVICE_ACCOUNT_JSON with a service-account JSON containing client_email and private_key)"
-            );
-
-        }
 
     }
 );

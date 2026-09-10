@@ -1,3 +1,4 @@
+
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
@@ -7,7 +8,7 @@ const mysql = require("mysql2/promise");
 const useMysql = Boolean(process.env.DB_HOST && process.env.DB_NAME);
 
 const dataDirectory =
-  process.env.GOOGLE_DATA_DIR ||
+  process.env.DATA_DIR ||
   path.join(__dirname, "data");
 
 const databasePath = path.join(dataDirectory, "website.db");
@@ -137,8 +138,21 @@ async function initializeDatabase() {
       )
     `);
 
+    await run(`
+      CREATE TABLE IF NOT EXISTS newsletter_subscriptions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        status VARCHAR(50) DEFAULT 'active',
+        subscribedAt DATETIME NOT NULL,
+        updatedAt DATETIME NOT NULL,
+        unsubscribedAt DATETIME NULL
+      )
+    `);
+
     await run(`CREATE INDEX IF NOT EXISTS idx_admin_email ON admins(email)`);
     await run(`CREATE INDEX IF NOT EXISTS idx_quote_email ON quote_submissions(email)`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_newsletter_email ON newsletter_subscriptions(email)`);
 
     await run(`
       CREATE TABLE IF NOT EXISTS blog_posts (
@@ -199,8 +213,21 @@ async function initializeDatabase() {
     )
   `);
 
+  await run(`
+    CREATE TABLE IF NOT EXISTS newsletter_subscriptions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      status TEXT DEFAULT 'active',
+      subscribedAt TEXT NOT NULL,
+      updatedAt TEXT NOT NULL,
+      unsubscribedAt TEXT
+    )
+  `);
+
   await run(`CREATE INDEX IF NOT EXISTS idx_admin_email ON admins(email)`);
   await run(`CREATE INDEX IF NOT EXISTS idx_quote_email ON quote_submissions(email)`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_newsletter_email ON newsletter_subscriptions(email)`);
 
   await run(`
     CREATE TABLE IF NOT EXISTS blog_posts (
@@ -348,7 +375,7 @@ async function createQuoteSubmission(payload) {
     adminNotes
   } = payload;
 
-  return run(
+  const result = await run(
     `INSERT INTO quote_submissions (
       createdAt,
       fullName,
@@ -385,6 +412,85 @@ async function createQuoteSubmission(payload) {
       status || "New",
       adminNotes || ""
     ]
+  );
+
+  return get("SELECT * FROM quote_submissions WHERE id = ?", [result.id]);
+}
+
+async function createNewsletterSubscription({ name, email }) {
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  const subscriptionName = String(name || "").trim();
+  const now = new Date().toISOString();
+  const existing = await get(
+    "SELECT * FROM newsletter_subscriptions WHERE email = ?",
+    [normalizedEmail]
+  );
+
+  if (existing) {
+    await run(
+      `UPDATE newsletter_subscriptions
+       SET name = ?, status = 'active', updatedAt = ?, unsubscribedAt = NULL
+       WHERE id = ?`,
+      [subscriptionName || existing.name, now, existing.id]
+    );
+
+    return {
+      subscription: await get(
+        "SELECT * FROM newsletter_subscriptions WHERE id = ?",
+        [existing.id]
+      ),
+      created: false
+    };
+  }
+
+  const result = await run(
+    `INSERT INTO newsletter_subscriptions
+     (name, email, status, subscribedAt, updatedAt, unsubscribedAt)
+     VALUES (?, ?, 'active', ?, ?, NULL)`,
+    [subscriptionName, normalizedEmail, now, now]
+  );
+
+  return {
+    subscription: await get(
+      "SELECT * FROM newsletter_subscriptions WHERE id = ?",
+      [result.id]
+    ),
+    created: true
+  };
+}
+
+async function listNewsletterSubscriptions({ includeUnsubscribed = false } = {}) {
+  const where = includeUnsubscribed
+    ? ""
+    : " WHERE status = 'active'";
+
+  return all(
+    `SELECT * FROM newsletter_subscriptions${where} ORDER BY subscribedAt DESC`
+  );
+}
+
+async function updateNewsletterSubscriptionStatus(id, status) {
+  const allowedStatuses = ["active", "unsubscribed"];
+  if (!allowedStatuses.includes(status)) return null;
+
+  const unsubscribedAt = status === "unsubscribed" ? new Date().toISOString() : null;
+  await run(
+    `UPDATE newsletter_subscriptions
+     SET status = ?, updatedAt = ?, unsubscribedAt = ?
+     WHERE id = ?`,
+    [status, new Date().toISOString(), unsubscribedAt, id]
+  );
+
+  return get(
+    "SELECT * FROM newsletter_subscriptions WHERE id = ?",
+    [id]
+  );
+}
+
+async function deleteNewsletterSubscription(id) {
+  return run(
+    "DELETE FROM newsletter_subscriptions WHERE id = ?",
+    [id]
   );
 }
 
@@ -538,6 +644,9 @@ async function listBlogPosts({ includeUnpublished = false } = {}) {
 
 module.exports = {
   db,
+  run,
+  get,
+  all,
   initializeDatabase,
   migrateLegacyAdmins,
   getAllAdmins,
@@ -550,6 +659,10 @@ module.exports = {
   updatePassword,
   createQuoteSubmission,
   listQuoteSubmissions,
+  createNewsletterSubscription,
+  listNewsletterSubscriptions,
+  updateNewsletterSubscriptionStatus,
+  deleteNewsletterSubscription,
   createBlogPost,
   updateBlogPost,
   deleteBlogPost,

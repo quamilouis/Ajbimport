@@ -4491,6 +4491,42 @@ button {
     background: #f3f5f7;
 }
 
+.article-page .header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(3, 24, 39, 1);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.18);
+}
+
+.article-page .desktop-navigation a {
+    color: rgba(255,255,255,0.8);
+}
+
+.article-page .desktop-navigation a:hover,
+.article-page .desktop-navigation a.active {
+    color: var(--white);
+}
+
+.article-page .nav-cta {
+    background: var(--gold);
+    color: var(--navy-dark);
+}
+
+.article-page .nav-cta:hover {
+    background: var(--gold-dark);
+    color: var(--navy-dark);
+}
+
+.article-page .logo {
+    color: var(--white);
+}
+
+.article-page .mobile-menu-btn {
+    color: var(--white);
+}
+
 .article-shell {
     padding: 170px 0 100px;
 }

@@ -1,4 +1,4 @@
-const { initializeDatabase, migrateLegacyAdmins, listQuoteSubmissions, getAllAdmins } = require("./database");
+const { initializeDatabase, migrateLegacyAdmins, listQuoteSubmissions, listNewsletterSubscriptions, getAllAdmins } = require("./database");
 
 (async () => {
   try {
@@ -6,11 +6,13 @@ const { initializeDatabase, migrateLegacyAdmins, listQuoteSubmissions, getAllAdm
     await migrateLegacyAdmins();
 
     const submissions = await listQuoteSubmissions();
+    const subscriptions = await listNewsletterSubscriptions({ includeUnsubscribed: true });
     const admins = await getAllAdmins();
 
     console.log(JSON.stringify({
       db_ok: true,
       quote_count: submissions.length,
+      subscription_count: subscriptions.length,
       admin_count: admins.length,
       database_path: "data/website.db"
     }));

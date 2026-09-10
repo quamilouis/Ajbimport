@@ -132,14 +132,18 @@
         <a
             href="#"
             class="nav-item"
-            data-section="sheets"
+            data-section="subscribers"
         >
 
-            <i class="fa-solid fa-sheet"></i>
+            <i class="fa-solid fa-users"></i>
 
             <span>
-                Google Sheets
+                Newsletter Subscribers
             </span>
+
+            <b id="sidebarSubscriberCount">
+                0
+            </b>
 
         </a>
 
@@ -696,6 +700,10 @@
                             </th>
 
                             <th>
+                                Message
+                            </th>
+
+                            <th>
                                 Service
                             </th>
 
@@ -818,6 +826,10 @@
 
                             <th>
                                 Contact
+                            </th>
+
+                            <th>
+                                Message
                             </th>
 
                             <th>
@@ -1079,103 +1091,30 @@
 
 
     <!-- =====================================
-         GOOGLE SHEETS SECTION
+         NEWSLETTER SUBSCRIBERS SECTION
     ====================================== -->
 
     <section
-        id="sheetsSection"
+        id="subscribersSection"
         class="admin-section"
     >
 
         <div class="section-heading">
 
             <span>
-                INTEGRATION
+                AUDIENCE
             </span>
 
             <h2>
-                Google Sheets
+                Newsletter Subscribers
             </h2>
 
             <p>
-                Sync and manage quote submissions
-                stored in your connected Google Sheet.
+                Manage newsletter subscriptions
+                collected through the public website.
             </p>
 
         </div>
-
-
-        <!-- =====================================
-             CONNECTION STATUS
-        ====================================== -->
-
-        <div class="admin-panel">
-
-            <div class="panel-header">
-
-                <div>
-
-                    <span>
-                        CONNECTION
-                    </span>
-
-                    <h2>
-                        Connection Status
-                    </h2>
-
-                </div>
-
-            </div>
-
-            <div
-                id="sheetsStatus"
-                class="sheets-status"
-            >
-
-                <div class="sheets-status-row">
-
-                    <span class="status-label">
-                        Status
-                    </span>
-
-                    <span class="status-value status-not-configured" id="sheetsConnectionStatus">
-                        Checking...
-                    </span>
-
-                </div>
-
-                <div class="sheets-status-row">
-
-                    <span class="status-label">
-                        Spreadsheet ID
-                    </span>
-
-                    <span class="status-value" id="sheetsIdValue">
-                        -
-                    </span>
-
-                </div>
-
-                <div class="sheets-status-row">
-
-                    <span class="status-label">
-                        Worksheet
-                    </span>
-
-                    <span class="status-value" id="sheetsTabValue">
-                        -
-                    </span>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- =====================================
-             SYNC & SUBMISSIONS
-        ====================================== -->
 
         <div class="admin-panel">
 
@@ -1188,27 +1127,38 @@
                     </span>
 
                     <h2>
-                        Submissions
+                        Subscriber List
                     </h2>
 
                 </div>
 
-                <div class="sheets-toolbar">
+                <div class="quote-toolbar">
 
-                    <button
-                        class="panel-button"
-                        id="syncFromSheets"
+                    <input
+                        type="search"
+                        id="subscriberSearch"
+                        placeholder="Search name or email..."
                     >
 
-                        <i class="fa-solid fa-sync"></i>
+                    <select id="subscriberStatusFilter">
 
-                        Sync from Sheet
+                        <option value="all">
+                            All Statuses
+                        </option>
 
-                    </button>
+                        <option value="active">
+                            Active
+                        </option>
+
+                        <option value="unsubscribed">
+                            Unsubscribed
+                        </option>
+
+                    </select>
 
                     <button
-                        class="panel-button"
-                        id="refreshSheets"
+                        class="action-button"
+                        id="refreshSubscribers"
                     >
 
                         <i class="fa-solid fa-arrows-rotate"></i>
@@ -1222,7 +1172,7 @@
             </div>
 
             <div
-                id="sheetsMessage"
+                id="subscribersMessage"
                 class="message"
             ></div>
 
@@ -1235,11 +1185,7 @@
                         <tr>
 
                             <th>
-                                Row
-                            </th>
-
-                            <th>
-                                Customer
+                                Name
                             </th>
 
                             <th>
@@ -1247,35 +1193,31 @@
                             </th>
 
                             <th>
-                                Service
-                            </th>
-
-                            <th>
-                                Route
-                            </th>
-
-                            <th>
-                                Date
-                            </th>
-
-                            <th>
                                 Status
                             </th>
 
                             <th>
-                                Notes
+                                Subscribed
+                            </th>
+
+                            <th>
+                                Updated
+                            </th>
+
+                            <th>
+                                Actions
                             </th>
 
                         </tr>
 
                     </thead>
 
-                    <tbody id="sheetsSubmissionsTable">
+                    <tbody id="subscribersTable">
 
                         <tr>
 
-                            <td colspan="8">
-                                Loading submissions...
+                            <td colspan="6">
+                                Loading subscribers...
                             </td>
 
                         </tr>
@@ -1420,14 +1362,28 @@
                 <div class="blog-form-group">
 
                     <label>
-                        Cover Image URL
+                        Cover Image
                     </label>
 
-                    <input
-                        type="url"
-                        id="blogImage"
-                        placeholder="Cargo-Truck-5.jpg"
-                    >
+                    <div class="blog-upload-row">
+
+                        <input
+                            type="text"
+                            id="blogImage"
+                            placeholder="Upload an image or paste a URL"
+                        >
+
+                        <label class="upload-button-label">
+                            <input
+                                type="file"
+                                id="blogImageUpload"
+                                accept="image/*"
+                                hidden
+                            >
+                            Upload Image
+                        </label>
+
+                    </div>
 
                 </div>
 
@@ -1459,6 +1415,20 @@
                         required
                         placeholder="Write your article content here..."
                     ></textarea>
+
+                    <div class="blog-upload-row blog-upload-row-inline">
+
+                        <label class="upload-button-label">
+                            <input
+                                type="file"
+                                id="blogMediaUpload"
+                                accept="image/*,video/*"
+                                hidden
+                            >
+                            Upload Image or Video
+                        </label>
+
+                    </div>
 
                 </div>
 
@@ -1511,6 +1481,18 @@
                     >
 
                         Cancel
+
+                    </button>
+
+                    <button
+                        type="button"
+                        class="action-button"
+                        id="previewBlogPost"
+                    >
+
+                        <i class="fa-solid fa-eye"></i>
+
+                        Preview
 
                     </button>
 

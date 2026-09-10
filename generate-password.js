@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
 
-const password = process.argv[2] || "ChangeMe123!";
+const password = process.argv[2] || "AJBadmin@19";
 
 bcrypt.hash(password, 12, (err, hash) => {
   if (err) {

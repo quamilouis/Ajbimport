@@ -8,16 +8,13 @@ const nodemailer = require('nodemailer');
   const env = [
     'PORT=3000',
     `SESSION_SECRET=AJB_${crypto.randomBytes(24).toString('hex')}`,
-    'ADMIN_EMAIL=admin@ajbimports.com',
-    `ADMIN_PASSWORD_HASH=${bcrypt.hashSync('ChangeMe123!', 12)}`,
+    'ADMIN_EMAIL=aljaybeck@gmail.com',
+    `ADMIN_PASSWORD_HASH=${bcrypt.hashSync('AJBadmin@19', 12)}`,
     `SMTP_HOST=${account.smtp.host}`,
     `SMTP_PORT=${account.smtp.port}`,
     `SMTP_USER=${account.user}`,
     `SMTP_PASS=${account.pass}`,
-    'GOOGLE_SHEET_ID=',
-    'GOOGLE_SHEET_TAB=Quote Submissions',
-    'GOOGLE_SERVICE_ACCOUNT_JSON=',
-    'GOOGLE_DATA_DIR=./data',
+    'DATA_DIR=./data',
     'NODE_ENV=development'
   ].join('\n') + '\n';
 

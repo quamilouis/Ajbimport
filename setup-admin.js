@@ -2,8 +2,8 @@ const bcrypt = require("bcryptjs");
 const db = require("./database");
 
 async function createDefaultAdmin() {
-  const email = "admin@ajbimports.com";
-  const password = "ChangeMe123!";
+  const email = "aljaybeck@gmail.com";
+  const password = "AJBadmin@19";
 
   const existing = await db.getAdminByEmail(email);
 
